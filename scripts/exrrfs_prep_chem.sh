@@ -136,24 +136,39 @@ if [[ "${EMIS_SECTOR_TO_PROCESS}" == "smoke" ]]; then
 # Remove any old files
 rm -f ${UMBRELLA_PREP_CHEM_DATA}/smoke.init*nc
 #
-if [[ ! ${RAVE_DIR} ]]; then
-RAVE_INPUTDIR=/public/data/grids/nesdis/3km_fire_emissions/
-else
-RAVE_INPUTDIR=${RAVE_DIR}/raw/
-fi
-ECO_INPUTDIR=${DATADIR_CHEM}/aux/ecoregion/raw/
+# Here we need to define the RAVE INPUT DIRECTORY
+# If a RAVE directory is not defined in the experiment file,
+# we can either look in the realtime data or in the chem 
+# shared space
 #
+# Otherwise, use the defined RAVE_DIR to define the input directory 
+if [[ ! ${RAVE_DIR} ]]; then
+   #  
+   if [[ ${REALTIME} ]]; then
+      RAVE_INPUTDIR=/public/data/grids/nesdis/3km_fire_emissions/
+   else
+      RAVE_INPUTDIR=${DATADIR_CHEM}/emissions/RAVE/raw/
+   fi
+   #
+else
+   RAVE_INPUT_DIR=${RAVE_DIR}/raw/
+fi
+#
+ECO_INPUTDIR=${DATADIR_CHEM}/aux/ecoregion/raw/
 FMC_INPUTDIR=${DATADIR_CHEM}/aux/FMC/raw/${YYYY}/${MM}/
-
-if [[ "${CREATE_OWN_DATA}" == "TRUE" ]]; then
+#
+#
+## FOR NOW WE CAN ALWAYS CREATE OUR OWN DATA UNTIL WE HAVE A 
+# BETTER WAY TO CHECK FOR PRE-GENERATED DATA
+#if [[ "${CREATE_OWN_DATA}" == "TRUE" ]]; then
 RAVE_OUTPUTDIR=${DATA}
 ECO_OUTPUTDIR=${DATA}
 FMC_OUTPUTDIR=${DATA}
-else
+#else
 # TODO, check for pregenerated data
-RAVE_OUTPUTDIR=${RAVE_DIR}/processed/
-ECO_OUTPUTDIR=${DATADIR_CHEM}/aux/ecoregion/processed/
-FMC_OUTPUTDIR=${DATADIR_CHEM}/aux/FMC/processed/${YYYY}/${MM}/
+#RAVE_OUTPUTDIR=${DATADIR_CHEM}/processed/
+#ECO_OUTPUTDIR=${DATADIR_CHEM}/aux/ecoregion/processed/
+#FMC_OUTPUTDIR=${DATADIR_CHEM}/aux/FMC/processed/${YYYY}/${MM}/
 fi
 #
 dummyRAVE=${RAVE_DIR}/processed/RAVE.dummy.${MESH_NAME}.nc
@@ -196,9 +211,9 @@ if [[ ! -e ${dummyRAVE} ]]; then
     ncap2 -O -s 'e_bb_in_smoke_nh3=0.*e_bb_in_smoke_fine' ${dummyRAVE} ${dummyRAVE}    
     ncap2 -O -s 'frp_in=0.*frp_in' ${dummyRAVE} ${dummyRAVE}    
     ncap2 -O -s 'fre_in=0.*fre_in' ${dummyRAVE} ${dummyRAVE}   
- fi 
-else
+ else
     echo "Do not have and cannot create dummy RAVE file as no RAVE data is available"
+ fi 
 fi
 # Loop through the hours and link the files so they have the correct filename and variable names 
 # TODO - Update variable names via outside script or within regrid.py -- mapping table?
