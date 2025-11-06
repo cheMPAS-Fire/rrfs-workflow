@@ -169,7 +169,7 @@ FMC_OUTPUTDIR=${DATA}
 #RAVE_OUTPUTDIR=${DATADIR_CHEM}/processed/
 #ECO_OUTPUTDIR=${DATADIR_CHEM}/aux/ecoregion/processed/
 #FMC_OUTPUTDIR=${DATADIR_CHEM}/aux/FMC/processed/${YYYY}/${MM}/
-fi
+#fi
 #
 dummyRAVE=${RAVE_DIR}/processed/RAVE.dummy.${MESH_NAME}.nc
 if [[ ! -e ${dummyRAVE} ]]; then
