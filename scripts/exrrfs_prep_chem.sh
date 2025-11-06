@@ -151,7 +151,7 @@ if [[ ! ${RAVE_DIR} ]]; then
    fi
    #
 else
-   RAVE_INPUT_DIR=${RAVE_DIR}/raw/
+   RAVE_INPUTDIR=${RAVE_DIR}/raw/
 fi
 #
 ECO_INPUTDIR=${DATADIR_CHEM}/aux/ecoregion/raw/
