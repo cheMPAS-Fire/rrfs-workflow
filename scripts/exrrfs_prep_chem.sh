@@ -87,7 +87,7 @@ DOY_END=$(date -d "${CDATE:0:8} ${CDATE:8:2} + ${my_fcst_length} hours" +%j)  # 
 # Set the init/mesh file name and link here:\
 if [[ -r "${UMBRELLA_PREP_IC_DATA}"/init.nc ]]; then
    ln -sf "${UMBRELLA_PREP_IC_DATA}"/init.nc init.nc
-   INIT_FILE=./${MESH_NAME}.init.nc
+   INIT_FILE=./init.nc
 else
    echo "WARNING: NO Init File available, cannot reinterpolate if files are missing, did you run the task out of order?"
 fi
