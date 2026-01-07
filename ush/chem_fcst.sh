@@ -89,7 +89,7 @@ if [[ -s "${UMBRELLA_PREP_CHEM_DATA}/rwc.init.nc" ]]; then
   sed -i "\$e cat ${PARMrrfs}/chemistry/streams.atmosphere.rwc" streams.atmosphere
   ln -snf "${UMBRELLA_PREP_CHEM_DATA}"/rwc.init.nc rwc.init.nc
   # Set namelist
-  #sed -e "s/@online_rwc_emis@/1/" "${PARMrrfs}"/namelist.atmosphere  > namelist.atmosphere 
+  sed -e "s/@online_rwc_emis@/1/" "${PARMrrfs}"/namelist.atmosphere  > namelist.atmosphere
 fi
 #
 # Replace the num_chem value with the correct number
