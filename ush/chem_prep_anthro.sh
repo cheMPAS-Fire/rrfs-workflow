@@ -96,11 +96,6 @@ if [[ -r ${EMISFILE_BASE_RAW1} ]] && [[ -r ${EMISFILE_BASE_RAW2} ]]; then
 	    ncrename -v NH3,e_ant_in_nh3 "${EMISFILE_FINAL}"
 	    ncrename -v NOX,e_ant_in_nox "${EMISFILE_FINAL}"
 	    ncrename -v SO2,e_ant_in_so2 "${EMISFILE_FINAL}"
-          # TODO, other species
-            ncap2 -O -s 'e_ant_in_smoke_fine=0.0*e_ant_in_unspc_fine' "${EMISFILE_FINAL}" "${EMISFILE_FINAL}"
-            ncap2 -O -s 'e_ant_in_smoke_coarse=0.0*e_ant_in_unspc_fine' "${EMISFILE_FINAL}" "${EMISFILE_FINAL}"
-            ncap2 -O -s 'e_ant_in_dust_fine=0.0*e_ant_in_unspc_fine' "${EMISFILE_FINAL}" "${EMISFILE_FINAL}"
-            ncap2 -O -s 'e_ant_in_dust_coarse=0.0*e_ant_in_unspc_fine' "${EMISFILE_FINAL}" "${EMISFILE_FINAL}"
             ln -sf "${EMISFILE_FINAL}" "${LINKEDEMISFILE}"
          fi
      done

@@ -51,15 +51,9 @@ if (( ${#files[@]}  )); then  # at least one file exists
   #
   if [[ "${CHEM_GROUPS,,}" == *anthro* ]]; then
      sed -i "s/config_anthro_scheme\s*=\s*'off'/config_anthro_scheme  = 'simple_aero'/g" namelist.atmosphere
-     num_chem=$(( num_chem + 3 ))
-     if [[ "${CHEM_GROUPS,,}" == *dust* ]]; then
-        num_chem=$(( num_chem - 2 ))
-     fi
-     if [[ "${CHEM_GROUPS,,}" == *smoke* ]]; then
-        num_chem=$(( num_chem - 1 ))
-     fi
+     num_chem=$(( num_chem + 1 ))
      if [[ "${CONFIG_COARSE}" == "TRUE" ]]; then
-	num_chem=$(( num_chem + 2 ))
+	num_chem=$(( num_chem + 1 ))
      fi
   fi
 fi
@@ -82,9 +76,6 @@ if (( ${#files[@]}  )); then  # at least one file exists
   if [[ "${CHEM_GROUPS,,}" == *smoke* ]]; then
      sed -i "s/config_smoke_scheme\s*=\s*'off'/config_smoke_scheme = 'on'/g" namelist.atmosphere
      num_chem=$(( num_chem + 1 ))
-  fi
-  if [[ "${CHEM_GROUPS,,}" == *anthro* ]]; then
-     num_chem=$(( num_chem - 1 ))
   fi
   if [[ "${CONFIG_COARSE}" == "TRUE" ]]; then
      num_chem=$(( num_chem + 1 ))
