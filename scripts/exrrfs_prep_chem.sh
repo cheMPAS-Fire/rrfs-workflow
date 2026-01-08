@@ -88,10 +88,13 @@ DOY_END=$(date -d "${CDATE:0:8} ${CDATE:8:2} + ${my_fcst_length} hours" +%j)  # 
 if [[ -r "${UMBRELLA_PREP_IC_DATA}"/init.nc ]]; then
    ln -sf "${UMBRELLA_PREP_IC_DATA}"/init.nc init.nc
    INIT_FILE=./init.nc
+elif [[ -r "${UMBRELLA_PREP_IC_DATA}"/mpasout.nc ]]; then
+   ln -sf "${UMBRELLA_PREP_IC_DATA}"/mpasout.nc init.nc
+   INIT_FILE=./init.nc
 else
-   echo "WARNING: NO Init File available, cannot reinterpolate if files are missing, did you run the task out of order?"
+   echo "FATAL: NO Init File available, cannot reinterpolate if files are missing, did you run the task out of order?"
+   err_exit
 fi
-
 #
 SCRIPT=${USHrrfs}/chem_regrid.py
 VINTERP_SCRIPT=${USHrrfs}/chem_vinterp.py
