@@ -660,7 +660,7 @@ class RaveToMpasRegridProcessor:
         if self.context.dataset_name == "GRA2PES" and field_name in ("PM25-PRI", "PM10-PRI"):
             conv_aer = 1.e6 / 3600.
         # GRA2PES methane, convert from moles/km2/hr to ug/m2/s
-        elif self.context.dataset_name == "GRA2PES" and field_name == ("HC01", "SO2", "CO", "NH3", "NOX"):
+        elif self.context.dataset_name == "GRA2PES" and field_name in ("HC01", "SO2", "CO", "NH3", "NOX"):
             conv_aer = 1.e-6 / 3600.
         # RAVE methane, convert from kg/hr to mol/m2/s
         elif self.context.dataset_name == "RAVE":
