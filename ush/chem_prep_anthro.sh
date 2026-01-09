@@ -53,8 +53,8 @@ if [[ -r ${EMISFILE_BASE_RAW1} ]] && [[ -r ${EMISFILE_BASE_RAW2} ]]; then
      echo "ERROR: Did not interpolate ${ANTHRO_EMISINV}"
      exit 1
   else
-     ncpdq -O -a Time,nCells,nkemit "${EMISFILE1}" "${EMISFILE1}"
-     ncpdq -O -a Time,nCells,nkemit "${EMISFILE2}" "${EMISFILE2}"
+     ncpdq -O -a Time,nCells,nkanthro "${EMISFILE1}" "${EMISFILE1}"
+     ncpdq -O -a Time,nCells,nkanthro "${EMISFILE2}" "${EMISFILE2}"
      ncks -O --mk_rec_dmn Time "${EMISFILE1}" "${EMISFILE1}"
      ncks -O --mk_rec_dmn Time "${EMISFILE2}" "${EMISFILE2}"
      ncks -O -6  "${EMISFILE1}" "${EMISFILE1}"
