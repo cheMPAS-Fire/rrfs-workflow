@@ -44,9 +44,8 @@
 	url = https://github.com/pyDAmonitor/pyDAmonitor.git
         ignore = all
 [submodule "sorc/regrid-wrapper"]
-	path = sorc/regrid-wrapper
-	url = https://github.com/jordanschnell/regrid-wrapper.git
-	branch = mpas_aero_v0
+	path = sorc/chem-regrid-wrapper
+	url = https://github.com/RRFSx/regrid-wrapper.git
 	ignore = all
 [submodule "sorc/NGFS-FRP"]
 	path = sorc/NGFS-FRP
