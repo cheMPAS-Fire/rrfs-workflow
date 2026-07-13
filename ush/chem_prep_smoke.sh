@@ -78,21 +78,21 @@ mv ./*.log ./*.ESMF_LogFile logs || echo "could not move logs"
 #
 # Loop through the hours and link the files so they have the correct filename and variable names 
 # TODO - Update variable names via outside script or within regrid.py -- mapping table?
-for ihour in $(seq 0 "${my_fcst_length}");
+for ihour in $(seq "${HH}" "$((HH + my_fcst_length))");
 do
   if (( ihour > 24 )); then
-    ihour2=$((ihour-24))
+    ihour2=$((HH+ihour - 24))
   else
     ihour2=${ihour}
   fi
-  if [[ "${EBB_DCYCLE}" == -1 ]]; then
-     # Peristence emissions, only 24 forecasts are possible
-     # Beyond that we need to repeat the emissions
-     timestr1=$(date +%Y%m%d%H -d "$previous_day + $ihour2 hours")
-  else
+  if [[ "${EBB_DCYCLE}" == 1 ]]; then
      # Either NOWcast (1 emission file per current forecast hour) or
      # Forecasted emissions requiring the previous 24 hours
      timestr1=$(date +%Y%m%d%H -d "$current_day + $ihour hours")
+  else
+     # Peristence emissions, only 24 forecasts are possible
+     # Beyond that we need to repeat the emissions
+     timestr1=$(date +%Y%m%d%H -d "$previous_day + $ihour2 hours")
   fi
 
   timestr2=$(date +%Y-%m-%d_%H -d "$current_day + $ihour hours")
