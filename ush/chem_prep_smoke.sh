@@ -78,25 +78,27 @@ mv ./*.log ./*.ESMF_LogFile logs || echo "could not move logs"
 #
 # Loop through the hours and link the files so they have the correct filename and variable names 
 # TODO - Update variable names via outside script or within regrid.py -- mapping table?
-for ihour in $(seq 0 "${my_fcst_length}");
+for ihour in $(seq 0 "$((my_fcst_length))");
 do
-  if (( ihour > 24 )); then
-    ihour2=$((ihour-24))
+  current_hh=$((HH+ihour)) 
+  if (( current_hh > 24 )); then
+    ihour2=$((current_hh - 24))
   else
-    ihour2=${ihour}
+    ihour2=${current_hh}
   fi
-  if [[ "${EBB_DCYCLE}" == -1 ]]; then
-     # Peristence emissions, only 24 forecasts are possible
-     # Beyond that we need to repeat the emissions
-     timestr1=$(date +%Y%m%d%H -d "$previous_day + $ihour2 hours")
-  else
+  current_fcst_time="${current_day} ${HH} + ${ihour} hours"
+  if [[ "${EBB_DCYCLE}" == 1 ]]; then
      # Either NOWcast (1 emission file per current forecast hour) or
      # Forecasted emissions requiring the previous 24 hours
-     timestr1=$(date +%Y%m%d%H -d "$current_day + $ihour hours")
+     timestr1=$(date +%Y%m%d%H -d "${current_fcst_time}")
+  else
+     # Peristence emissions, only 24 forecasts are possible
+     # Beyond that we need to repeat the emissions
+     timestr1=$(date +%Y%m%d%H -d "${previous_day} 00 + ${ihour2} hours")
   fi
 
-  timestr2=$(date +%Y-%m-%d_%H -d "$current_day + $ihour hours")
-  timestr3=$(date +%Y-%m-%d_%H:00:00 -d "$current_day + $ihour hours")
+  timestr2=$(date +%Y-%m-%d_%H -d "${current_fcst_time}")
+  timestr3=$(date +%Y-%m-%d_%H:00:00 -d "${current_fcst_time}")
   #
   EMISFILE="${UMBRELLA_PREP_CHEM_DATA}/smoke.init.retro.${timestr2}.00.00.nc"
   EMISFILE2="${RAVE_OUTPUTDIR}/${MESH_NAME}-${FIRE_DATASET}-${timestr1}.nc"
