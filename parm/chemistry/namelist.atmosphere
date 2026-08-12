@@ -20,6 +20,7 @@
     plumerise_opt = 1
     drydep_opt = 1
     pm_settling = 1
+    dust_opt = 2
     dust_alpha  = 1.0
     dust_gamma = 1.0
     dust_drylimit_factor = 0.1

@@ -36,8 +36,8 @@ fi
 
 # Dust
 if [[ "${CHEM_GROUPS,,}" == *dust* ]]; then
-  if [[ -s "${FIXrrfs}/chemistry/dust/fengsha_dust_inputs.${MESH_NAME}.nc" ]]; then
-     ln -snf "${FIXrrfs}/chemistry/dust/fengsha_dust_inputs.${MESH_NAME}.nc" dust.init.nc
+  if [[ -s "${FIXrrfs}/chemistry/dust/dust_inputs.${MESH_NAME}.nc" ]]; then
+     ln -snf "${FIXrrfs}/chemistry/dust/dust_inputs.${MESH_NAME}.nc" dust.init.nc
      cat "${FIXrrfs}/chemistry/stream_list/stream_list.atmosphere.output.dust" >> ./stream_list/stream_list.atmosphere.output
      sed -i "\$e cat ${PARMrrfs}/chemistry/streams.atmosphere.dust" streams.atmosphere   
      sed -i "s/config_dust_scheme\s*=\s*'off'/config_dust_scheme  = 'on'/g" namelist.atmosphere
@@ -47,7 +47,7 @@ if [[ "${CHEM_GROUPS,,}" == *dust* ]]; then
         ncks -A -v xtime init.nc dust.init.nc
      fi
   else
-     echo "No fengsha_dust_input.${MESH_NAME}.nc file exists in ${FIXrrfs}, you can attempt to copy from one created in ${UMBRELLA_PREP_CHEM_DATA}, but otherwise cannot do dust, turning off in namelist"
+     echo "No dust_input.${MESH_NAME}.nc file exists in ${FIXrrfs}, you can attempt to copy from one created in ${UMBRELLA_PREP_CHEM_DATA}, but otherwise cannot do dust, turning off in namelist"
      sed -i "s/config_dust_scheme\s*=\s*'on'/config_dust_scheme  = 'off'/g" namelist.atmosphere
   fi
 fi
