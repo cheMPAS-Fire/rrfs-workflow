@@ -11,8 +11,14 @@ export PARMrrfs=${PARMrrfs:-${HOMErrfs}/parm}
 export USHrrfs=${USHrrfs:-${HOMErrfs}/ush}
 #
 pygrafdir="${HOMErrfs}/workflow/sideload/pygraf"
-image_list="${pygrafdir}/image_lists/regional_mpas_subset.yml"
-file_tmpl="rrfs.t${cyc}z.prslev.f0{FCST_TIME:02d}.conus.grib2"
+image_list="${pygrafdir}/image_lists/regional_mpas_fwx.yml"
+file_tmpl="rrfs.t${cyc}z.prslev.f0{FCST_TIME:02d}.${UPP_DOMAIN}.grib2"
+echo "Checking for file type"
+if [[ "${file_tmpl}" == *"nat"* ]]; then
+   ft=nat
+elif [[ "${file_tmpl}" == *"prs"* ]]; then
+   ft=prs
+fi
 model=${NET}
 ntasks=${NTASKS:-12}
 grib2_dir="${COMOUT}/upp/det"
@@ -36,7 +42,7 @@ tile=${TILE:-'full'}
 #
 if [[ "${GRAPHICS_ZIP^^}" == "TRUE" ]]; then
   mkdir -p "${zipdir}"
-  python create_graphics.py maps --all_leads -d ${grib2_dir} -f ${fhr1} ${fhr2} --file_type prs --file_tmpl ${file_tmpl} -m ${model} \
+  python create_graphics.py maps --all_leads -r 150 -d ${grib2_dir} -f ${fhr1} ${fhr2} --file_type ${ft} --file_tmpl ${file_tmpl} -m ${model} \
       --images ${image_list} hourly -n ${ntasks} -o ${workdir} -s ${CDATE} --tiles ${tile} -z ${zipdir} -w ${wait_minutes}
 else
   python create_graphics.py maps --all_leads -d ${grib2_dir} -f ${fhr1} ${fhr2} --file_type prs --file_tmpl ${file_tmpl} -m ${model} \

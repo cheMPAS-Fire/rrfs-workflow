@@ -28,7 +28,7 @@ export HISTORY_INTERVAL=${HISTORY_INTERVAL:-1}
 export pid=${pid:-$$}
 export UMBRELLA_FCST_DATA=${UMBRELLA_FCST_DATA:-${DATAROOT}/${RUN}_fcst_${cyc}_${rrfs_ver}/${WGF}${MEMDIR}}
 export jobid=${jobid:-mpassit_g${GROUP_INDEX}_${cyc}}
-export UMBRELLA_MPASSIT_DATA=${UMBRELLA_MPASSIT_DATA:-${DATAROOT}/${RUN}_mpassit_${cyc}_${rrfs_ver}/${WGF}${MEMDIR}}
+export UMBRELLA_MPASSIT_DATA=${UMBRELLA_MPASSIT_DATA:-${DATAROOT}/${RUN}_mpassit_${cyc}_${rrfs_ver}/${WGF}${MEMDIR}/${GROUP_HOURS}}
 export DATA=${DATA:-${UMBRELLA_MPASSIT_DATA}/${jobid}}
 
 if [[ -d "${DATA}" ]]; then # remove the ${DATA}/${GROUP_INDEX} directory if existed

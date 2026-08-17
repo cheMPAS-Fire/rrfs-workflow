@@ -3,14 +3,15 @@
 # Remove any old files
 rm -f "${UMBRELLA_PREP_CHEM_DATA}"/goes.aod.init*nc # why we need this?
 # 
-GOES_INPUT=/scratch4/BMC/zrtrr/jdduda/smoke_mask/GOES
+ln -sf ${FIXrrfs}/goes19_abi_conus_interpolated_lat_lon.nc ${GOES_OUTPUTDIR}
+ln -sf ${FIXrrfs}/goes18_abi_conus_lat_lon.nc ${GOES_OUTPUTDIR}
 # output directories
 GOES_OUTPUTDIR=${DATA}
 OUTPUTFILE=${UMBRELLA_PREP_CHEM_DATA}/goes.aod.init.nc
 
 #
 srun python -u "${SCRIPT}" \
-               "GOES" \
+               "${GOES_DATASET_NAME}" \
                "${DATA}" \
                "${GOES_INPUT}" \
                "${GOES_OUTPUTDIR}" \

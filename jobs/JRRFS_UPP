@@ -26,9 +26,9 @@ export HISTORY_INTERVAL=${HISTORY_INTERVAL:-1}
 #-----------------------------------------------------------------------
 #
 export pid=${pid:-$$}
-export UMBRELLA_MPASSIT_DATA=${UMBRELLA_MPASSIT_DATA:-${DATAROOT}/${RUN}_mpassit_${cyc}_${rrfs_ver}/${WGF}${MEMDIR}}
+export UMBRELLA_MPASSIT_DATA=${UMBRELLA_MPASSIT_DATA:-${DATAROOT}/${RUN}_mpassit_${cyc}_${rrfs_ver}/${WGF}${MEMDIR}/${GROUP_HOURS}}
 export jobid=${jobid:-upp_g${GROUP_INDEX}_${cyc}}
-export UMBRELLA_UPP_DATA=${UMBRELLA_UPP_DATA:-${DATAROOT}/${RUN}_upp_${cyc}_${rrfs_ver}/${WGF}${MEMDIR}}
+export UMBRELLA_UPP_DATA=${UMBRELLA_UPP_DATA:-${DATAROOT}/${RUN}_upp_${cyc}_${rrfs_ver}/${WGF}${MEMDIR}/${GROUP_HOURS}}
 export DATA=${DATA:-${UMBRELLA_UPP_DATA}/${jobid}}
 if [[ -d "${DATA}" ]]; then # remove the ${DATA}/${FHR} directory if existed
   rm -rf "${DATA}"
