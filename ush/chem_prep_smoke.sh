@@ -104,15 +104,15 @@ do
   EMISFILE="${UMBRELLA_PREP_CHEM_DATA}/smoke.init.retro.${timestr2}.00.00.nc"
   EMISFILE2="${RAVE_OUTPUTDIR}/${MESH_NAME}-${FIRE_DATASET}-${timestr1}.nc"
   if [[ -r "${EMISFILE2}" ]]; then
-    ncrename -v PM25,e_bb_in_smoke_fine "${EMISFILE2}"
-    ncrename -v FRP_MEAN,frp_in -v FRE,fre_in "${EMISFILE2}"
+    ncrename -v .PM25,e_bb_in_smoke_fine "${EMISFILE2}"
+    ncrename -v .FRP_MEAN,frp_in -v FRE,fre_in "${EMISFILE2}"
     if [[ "${FIRE_DATASET}" != "NGFS" ]]; then
-        ncrename -v SO2,e_bb_in_so2 "${EMISFILE2}"
-        ncrename -v CH4,e_bb_in_ch4 "${EMISFILE2}"
-        ncrename -v PM10,e_bb_in_smoke_coarse "${EMISFILE2}"
-        ncrename -v CO,e_bb_in_co "${EMISFILE2}"
-        ncrename -v NH3,e_bb_in_nh3 "${EMISFILE2}"
-        ncrename -v NOx,e_bb_in_nox "${EMISFILE2}"
+        ncrename -v .SO2,e_bb_in_so2 "${EMISFILE2}"
+        ncrename -v .CH4,e_bb_in_ch4 "${EMISFILE2}"
+        ncrename -v .PM10,e_bb_in_smoke_coarse "${EMISFILE2}"
+        ncrename -v .CO,e_bb_in_co "${EMISFILE2}"
+        ncrename -v .NH3,e_bb_in_nh3 "${EMISFILE2}"
+        ncrename -v .NOx,e_bb_in_nox "${EMISFILE2}"
     fi
     ln -sf "${EMISFILE2}" "${EMISFILE}"
     ncap2 -O -s 'frp_in=frp_in.ttl($nkwildfire)' -s 'fre_in=fre_in.ttl($nkwildfire)' "${EMISFILE}" "${EMISFILE}"
@@ -135,15 +135,15 @@ done
 #
 echo "Concatenating hourly files for use in forecast mode"
 # Concatenate for ebb2
-nc_vars="frp_in,fre_in,e_bb_in_smoke_fine"
-[[ "${FIRE_DATASET}" == "RAVE" ]] && nc_vars="${nc_vars},e_bb_in_so2,e_bb_in_ch4,e_bb_in_smoke_coarse,e_bb_in_nh3"
-ncrcat -v "${nc_vars}" "${UMBRELLA_PREP_CHEM_DATA}"/smoke.init.retro.*.00.00.nc "${UMBRELLA_PREP_CHEM_DATA}"/smoke.init.nc
+nc_vars="frp_in|fre_in|e_bb_in_smoke_fine"
+[[ "${FIRE_DATASET}" == "RAVE" ]] && nc_vars="${nc_vars}|e_bb_in_so2|e_bb_in_ch4|e_bb_in_smoke_coarse|e_bb_in_nh3"
+ncrcat -v "^(${nc_vars})$" "${UMBRELLA_PREP_CHEM_DATA}"/smoke.init.retro.*.00.00.nc "${UMBRELLA_PREP_CHEM_DATA}"/smoke.init.nc
 #
 # Calculate previous 24 hour average HWP
 #
 # TODO - presently hwp and totprcp have constant values
 ncap2 -O -s 'hwp_prev24=0.0*frp_in+30.' -s 'totprcp_prev24=0.0*frp_in+0.1' "${UMBRELLA_PREP_CHEM_DATA}"/smoke.init.nc "${UMBRELLA_PREP_CHEM_DATA}"/smoke.init.nc
-ncrename -v frp_in,frp_prev24 -v fre_in,fre_prev24 "${UMBRELLA_PREP_CHEM_DATA}"/smoke.init.nc
+ncrename -v .frp_in,frp_prev24 -v .fre_in,fre_prev24 "${UMBRELLA_PREP_CHEM_DATA}"/smoke.init.nc
 #
 # Emissions to be calculated inside of model
 if [[ ! -r "${ECO_OUTPUTDIR}/ecoregions_${MESH_NAME}_mpas.nc" ]] && [[ -r "${ECO_INPUTDIR}/veg_map.nc" ]]; then
@@ -173,7 +173,7 @@ if (( n_fmc > 0 )); then
   # Average for ebb2
   ncrcat "${FMC_OUTPUTDIR}"/fmc*"${MESH_NAME}"*nc "${UMBRELLA_PREP_CHEM_DATA}"/fmc.init.nc
   ncks -A -v 10h_dead_fuel_moisture_content "${UMBRELLA_PREP_CHEM_DATA}"/fmc.init.nc "${UMBRELLA_PREP_CHEM_DATA}"/smoke.init.nc
-  ncrename -v 10h_dead_fuel_moisture_content,fmc_prev24 "${UMBRELLA_PREP_CHEM_DATA}"/smoke.init.nc
+  ncrename -v .10h_dead_fuel_moisture_content,fmc_prev24 "${UMBRELLA_PREP_CHEM_DATA}"/smoke.init.nc
 else
   echo "No soil moisture information available, using static value of 0.2"
   ncap2 -O -s 'fmc_prev24=0*frp_prev24+0.2' "${UMBRELLA_PREP_CHEM_DATA}"/smoke.init.nc "${UMBRELLA_PREP_CHEM_DATA}"/smoke.init.nc
