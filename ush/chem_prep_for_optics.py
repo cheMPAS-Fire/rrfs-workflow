@@ -38,12 +38,18 @@ def read_refract_file(path):
     return wl, nr, ni
 
 
-def interp_complex(wl_src, nr_src, ni_src, wl_tgt):
+def interp_complex(wl_src, nr_src, ni_src, wl_tgt, outside_imag=None):
     x = np.log10(wl_src)
     xt = np.log10(wl_tgt)
 
     nr_t = np.interp(xt, x, nr_src, left=nr_src[0], right=nr_src[-1])
-    ni_t = np.interp(xt, x, ni_src, left=ni_src[0], right=ni_src[-1])
+    if outside_imag is None:
+        ni_left = ni_src[0]
+        ni_right = ni_src[-1]
+    else:
+        ni_left = outside_imag
+        ni_right = outside_imag
+    ni_t = np.interp(xt, x, ni_src, left=ni_left, right=ni_right)
     return nr_t, ni_t
 
 
@@ -71,7 +77,9 @@ def write_tbl(
 ):
     with open(outpath, "w") as f:
         f.write(f"{nsw} {nlw} {naero} ! Header: nswbands, nlwbands, num_aero_spc\n")
-        #f.write(f"{header_string}\n")
+
+        # f.write(f"{header_string}\n")
+
         for block in species_blocks:
             f.write(f"{block['sw_name']}\n")
             for i, (r, im) in enumerate(zip(block["sw_r"], block["sw_i"]), start=1):
@@ -86,7 +94,7 @@ def main():
     # ============================================================================
     # CONFIGURATION - Modify these values as needed
     # ============================================================================
-    
+
     # Input files
     water_file = "refract_water.txt"
     dust_file = "refract_dust_kwcp_fou.txt"
@@ -94,35 +102,41 @@ def main():
     nh4so4_file = "refract_ammoniumsulfate.txt"
     no3_file = "refract_nitrate.txt"
     unspc_file = "refract_soa_dinar.txt"
+    bc_file = "refract_bc_high.txt"
     output_file = "AERO_OPT.TBL"
-    
+
     # Number of bands
-    nsw = 4  # Number of shortwave bands , now match with original RRTMG swbands
+    nsw = 14  # Number of shortwave bands, matching the RRTMG-SW array order
     nlw = 16  # Number of longwave bands
-    naero = 6  # Number of aerosol species
-    
-    # Shortwave band edges (micrometers)
-    wavmin = [0.25, 0.35, 0.55, 0.998]
-    wavmax = [0.35, 0.45, 0.65, 1.000]
-    
+    naero = 7  # Number of aerosol species
+
+    # Shortwave band edges (micrometers), in the RRTMG-SW array order
+    # indices 1-14 correspond to RRTMG-SW bands 16-29
+    wavmin = [
+        3.076923, 2.500000, 2.150538, 1.941748, 1.626016, 1.298701,
+        1.242236, 0.778210, 0.625000, 0.441501, 0.344828, 0.263158,
+        0.200000, 3.846154,
+    ]
+    wavmax = [
+        3.846154, 3.076923, 2.500000, 2.150538, 1.941748, 1.626016,
+        1.298701, 1.242236, 0.778210, 0.625000, 0.441501, 0.344828,
+        0.263158, 12.195122,
+    ]
+
     # Longwave wavenumber band edges (cm^-1)
     wavenumber1 = [10., 350., 500., 630., 700., 820., 980., 1080., 1180., 1390., 1480., 1800., 2080., 2250., 2390., 2600.]
     wavenumber2 = [350., 500., 630., 700., 820., 980., 1080., 1180., 1390., 1480., 1800., 2080., 2250., 2390., 2600., 3250.]
-    
-    # Header string
+
     header_string = "AERO_OPT.TBL"
-    
-    # ============================================================================
-    # Optional: Override configuration with command-line arguments
-    # ============================================================================
-    
+
     p = argparse.ArgumentParser()
     p.add_argument("--water", default=water_file)
     p.add_argument("--dust", default=dust_file)
     p.add_argument("--smoke", default=smoke_file)
-    p.add_argument("--nh4so4", default=smoke_file)
-    p.add_argument("--no3", default=smoke_file)
-    p.add_argument("--unspc", default=smoke_file)
+    p.add_argument("--nh4so4", default=nh4so4_file)
+    p.add_argument("--no3", default=no3_file)
+    p.add_argument("--unspc", default=unspc_file)
+    p.add_argument("--bc", default=bc_file)
     p.add_argument("--out", default=output_file)
     p.add_argument("--nsw", type=int, default=nsw)
     p.add_argument("--nlw", type=int, default=nlw)
@@ -133,34 +147,29 @@ def main():
     # ============================================================================
     # Processing ! user may change or add sw_name, lw_name as they increase the species
     # ============================================================================
-    
     wl_sw = sw_band_centers(wavmin[: args.nsw], wavmax[: args.nsw])
     wl_lw = lw_band_centers_um(wavenumber1[: args.nlw], wavenumber2[: args.nlw])
 
-    w_wl, w_nr, w_ni = read_refract_file(args.water)
-    d_wl, d_nr, d_ni = read_refract_file(args.dust)
-    s_wl, s_nr, s_ni = read_refract_file(args.smoke)
-    s_wl, s_nr, s_ni = read_refract_file(args.nh4so4)
-    s_wl, s_nr, s_ni = read_refract_file(args.no3)
-    s_wl, s_nr, s_ni = read_refract_file(args.unspc)
-
-    w_sw_r, w_sw_i = interp_complex(w_wl, w_nr, w_ni, wl_sw)
-    w_lw_r, w_lw_i = interp_complex(w_wl, w_nr, w_ni, wl_lw)
-
-    d_sw_r, d_sw_i = interp_complex(d_wl, d_nr, d_ni, wl_sw)
-    d_lw_r, d_lw_i = interp_complex(d_wl, d_nr, d_ni, wl_lw)
-
-    s_sw_r, s_sw_i = interp_complex(s_wl, s_nr, s_ni, wl_sw)
-    s_lw_r, s_lw_i = interp_complex(s_wl, s_nr, s_ni, wl_lw)
-
-    species_blocks = [
-        dict(sw_name="WATER_DATA", lw_name="WATER_LW_PART", sw_r=w_sw_r, sw_i=w_sw_i, lw_r=w_lw_r, lw_i=w_lw_i),
-        dict(sw_name="DUST_DATA",  lw_name="DUST_LW_DATA",  sw_r=d_sw_r, sw_i=d_sw_i, lw_r=d_lw_r, lw_i=d_lw_i),
-        dict(sw_name="SMOKE_DATA", lw_name="SMOKE_LW_DATA", sw_r=s_sw_r, sw_i=s_sw_i, lw_r=s_lw_r, lw_i=s_lw_i),
-        dict(sw_name="NH4SO4_DATA", lw_name="NH4SO4_LW_DATA", sw_r=s_sw_r, sw_i=s_sw_i, lw_r=s_lw_r, lw_i=s_lw_i),
-        dict(sw_name="NO3_DATA", lw_name="NO3_LW_DATA", sw_r=s_sw_r, sw_i=s_sw_i, lw_r=s_lw_r, lw_i=s_lw_i),
-        dict(sw_name="UNSPC_DATA", lw_name="UNSPC_LW_DATA", sw_r=s_sw_r, sw_i=s_sw_i, lw_r=s_lw_r, lw_i=s_lw_i),
+    species_defs = [
+        ("WATER_DATA",   "WATER_LW_PART",  args.water),
+        ("DUST_DATA",    "DUST_LW_DATA",   args.dust),
+        ("SMOKE_DATA",   "SMOKE_LW_DATA",  args.smoke),
+        ("NH4SO4_DATA",  "NH4SO4_LW_DATA", args.nh4so4),
+        ("NO3_DATA",     "NO3_LW_DATA",    args.no3),
+        ("UNSPC_DATA",   "UNSPC_LW_DATA",  args.unspc),
+        ("BC_DATA",      "BC_LW_DATA",     args.bc),
     ]
+
+    species_blocks = []
+    for sw_name, lw_name, path in species_defs:
+        wl, nr, ni = read_refract_file(path)
+
+        sw_r, sw_i = interp_complex(wl, nr, ni, wl_sw, outside_imag=1.0e-7)
+        lw_r, lw_i = interp_complex(wl, nr, ni, wl_lw)
+
+        species_blocks.append(
+            dict(sw_name=sw_name, lw_name=lw_name, sw_r=sw_r, sw_i=sw_i, lw_r=lw_r, lw_i=lw_i)
+        )
 
     write_tbl(
         outpath=args.out,
@@ -170,8 +179,9 @@ def main():
         species_blocks=species_blocks,
         header_string=args.header,
     )
-    
-    print(f"Program End Successfully")
+
+    print("Program End Successfully")
+
 
 if __name__ == "__main__":
     main()
