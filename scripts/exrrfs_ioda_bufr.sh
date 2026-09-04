@@ -13,6 +13,7 @@ cp "${OBSPATH}/${CDATE}.rap.t${cyc}z.satwnd.tm00.bufr_d" satwndbufr
 cp "${OBSPATH}/${CDATE}.rap.t${cyc}z.gsrcsr.tm00.bufr_d" abibufr
 cp "${OBSPATH}/${CDATE}.rap.t${cyc}z.atms.tm00.bufr_d" atmsbufr
 cp "${OBSPATH}/${CDATE}.rap.t${cyc}z.crisf4.tm00.bufr_d" crisfsbufr
+cp "${OBSPATH}/${CDATE}.rap.t${cyc}z.crsfdb.tm00.bufr_d" crsfdbbufr
 cp "${OBSPATH}/${CDATE}.rap.t${cyc}z.mtiasi.tm00.bufr_d" iasibufr
 ${cpreq} "${EXECrrfs}"/bufr2ioda.x .
 ${cpreq} "${EXECrrfs}"/bufr2netcdf.x .
@@ -72,9 +73,9 @@ else
   echo "Input file ${input_file} does not exist."
 fi
 
-# --------------------------------------------------
-# run  bufr2netcdf tool for cris-fsr bufr obs
-# --------------------------------------------------
+# ---------------------------------------------------------------------
+# run bufr2netcdf tool for cris-fsr regular feed(crisfrbufr) bufr obs
+# ---------------------------------------------------------------------
 ${cpreq} "${PARMrrfs}/bufr2netcdf_cris-fsr.yaml" .
 input_file="crisfsbufr"
 output_file="ioda_crisf4_{splits/satId}.nc"
@@ -85,8 +86,21 @@ else
   echo "Input file ${input_file} does not exist."
 fi
 
+# -------------------------------------------------------------------
+# run bufr2netcdf tool for cris-fsr DB feed (crsfdbbufr) bufr obs
+# -------------------------------------------------------------------
+${cpreq} "${PARMrrfs}/bufr2netcdf_cris-fsr.yaml" .
+input_file="crsfdbbufr"
+output_file="ioda_crsfdb_{splits/satId}.nc"
+yaml="bufr2netcdf_cris-fsr.yaml"
+if [[ -s "${input_file}" ]]; then
+  ./bufr2netcdf.x "${input_file}" "${yaml}" "${output_file}"
+else
+  echo "Input file ${input_file} does not exist."
+fi
+
 # --------------------------------------------------
-# run  bufr2netcdf tool for mtiasi bufr obs
+# run bufr2netcdf tool for mtiasi bufr obs
 # --------------------------------------------------
 ${cpreq} "${PARMrrfs}/bufr2netcdf_mtiasi.yaml" .
 input_file="iasibufr"
@@ -137,29 +151,7 @@ cp "rap.t${cyc}z.abi_g16.tm00.nc" "ioda_abi_g16.nc"
 cp "rap.t${cyc}z.abi_g18.tm00.nc" "ioda_abi_g18.nc"
 
 # run offline IODA tools
-${cpreq} "${USHrrfs}"/offline_domain_check.py .
-${cpreq} "${USHrrfs}"/offline_domain_check_satrad.py .
-${cpreq} "${USHrrfs}"/offline_ioda_tweak.py .
 ${cpreq} "${USHrrfs}"/offline_vad_thinning.py .
-
-for ioda_file in ioda*nc; do
-  grid_file="${FIXrrfs}/${MESH_NAME}/${MESH_NAME}.static.nc"
-  if [[ "${ioda_file}" == *abi* && "${ioda_file}" != *satwnd* ]]; then
-    echo " ${ioda_file} ioda file detected: running offline_domain_check_satrad.py"
-    ./offline_domain_check_satrad.py -o "${ioda_file}" -g "${grid_file}" -s 0.005
-    base_name=$(basename "${ioda_file}" .nc)
-    mv  "${base_name}_dc.nc" "${base_name}.nc"
-  elif [[ "${ioda_file}" == *atms* || "${ioda_file}" == *cris* || "${ioda_file}" == *iasi* ]]; then
-    echo " ${ioda_file} ioda file detected: temporarily skipping offline domain check"
-  else
-    ./offline_domain_check.py -o "${ioda_file}" -g "${grid_file}" -s 0.005
-    base_name=$(basename "${ioda_file}" .nc)
-    mv  "${base_name}_dc.nc" "${base_name}.nc"
-    ./offline_ioda_tweak.py -o "${ioda_file}"
-    base_name=$(basename "${ioda_file}" .nc)
-    mv  "${base_name}_llp.nc" "${base_name}.nc"
-  fi
-done
 
 # Run vadwnd superobbing and thinning offline tool.
 ./offline_vad_thinning.py -i ioda_vadwnd.nc -o ioda_vadwnd_thinned.nc

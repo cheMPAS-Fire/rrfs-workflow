@@ -8,18 +8,19 @@ from rocoto_funcs.base import xml_task, get_cascade_env
 def nonvar_reflobs(xmlFile, expdir):
     task_id = 'nonvar_reflobs'
     cycledefs = 'prod'
-    num_spinup_cycledef = int(os.getenv('NUM_SPINUP_CYCLEDEF', '0'))
-    if num_spinup_cycledef == 1:
+    if os.getenv("DO_SPINUP", "FALSE").upper() == "TRUE":
         cycledefs = 'prod,spinup'
-    elif num_spinup_cycledef == 2:
-        cycledefs = 'prod,spinup,spinup2'
-    elif num_spinup_cycledef == 3:
-        cycledefs = 'prod,spinup,spinup2,spinup3'
     OBSPATH_NSSLMOSIAC = os.getenv("OBSPATH_NSSLMOSIAC", 'OBSPATH_NSSLMOSIAC_not_defined')
+    realtime = os.getenv("REALTIME", "false")
+    if realtime.upper() == "TRUE":
+        stop_if_no_obs = 0
+    else:
+        stop_if_no_obs = 1
     # Task-specific EnVars beyond the task_common_vars
     dcTaskEnv = {
         'REFERENCE_TIME': '@Y-@m-@dT@H:00:00Z',
-        'OBSPATH_NSSLMOSIAC': f'{OBSPATH_NSSLMOSIAC}'
+        'OBSPATH_NSSLMOSIAC': f'{OBSPATH_NSSLMOSIAC}',
+        'STOP_IF_NO_OBS': f'{stop_if_no_obs}'
     }
 
     dcTaskEnv['KEEPDATA'] = get_cascade_env(f"KEEPDATA_{task_id}".upper()).upper()

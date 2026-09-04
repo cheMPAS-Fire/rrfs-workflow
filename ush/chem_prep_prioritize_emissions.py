@@ -1,6 +1,8 @@
+#!/usr/bin/env python
 import xarray as xr
 import sys
 import os
+
 
 def prioritize_emissions(primary_nc, secondary_nc):
     # Load datasets fully into memory
@@ -27,7 +29,6 @@ def prioritize_emissions(primary_nc, secondary_nc):
             ds_out[var] = da
 
     print("\n--- Processing 'e_ant' Variables ---")
-    
     # Calculate how many layers we need to add to the primary data
     pad_size = max(0, n_sec - n_pri)
 
@@ -35,36 +36,35 @@ def prioritize_emissions(primary_nc, secondary_nc):
     for var in ds_pri.data_vars:
         if var.startswith('e_ant'):
             da_pri = ds_pri[var]
-            
             # Create a purely 2D spatial mask by dropping 'nkanthro'
             if 'nkanthro' in da_pri.dims:
                 da_spatial = da_pri.isel(nkanthro=0, drop=True)
             else:
                 da_spatial = da_pri
-                
+
             valid_mask_2d = (da_spatial != 0) & (da_spatial.notnull())
-            
+
             if var in ds_sec.data_vars:
                 # CASE 1: Exists in both datasets
                 da_sec = ds_sec[var]
-                
+
                 # Pad the primary variable with zeros for the upper layers
                 if pad_size > 0:
                     da_pri_padded = da_pri.pad(nkanthro=(0, pad_size), constant_values=0)
                     da_pri_padded = da_pri_padded.assign_coords(nkanthro=da_sec['nkanthro'])
                 else:
                     da_pri_padded = da_pri
-                
+
                 # Explicitly expand the 2D mask to a 3D mask that perfectly matches da_sec
                 valid_mask_3d = valid_mask_2d.broadcast_like(da_sec)
-                
+
                 # Merge the data
                 da_merged = xr.where(valid_mask_3d, da_pri_padded, da_sec)
-                
+
                 # MPAS FIX: Force the exact original dimension order
                 da_merged = da_merged.transpose(*da_sec.dims)
                 print(f"Case 1 (Merged spatial coverage): {var}")
-                
+
             else:
                 # CASE 2: Exists in primary only
                 if pad_size > 0:

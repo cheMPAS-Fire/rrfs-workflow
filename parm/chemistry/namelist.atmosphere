@@ -26,6 +26,7 @@
     dust_drylimit_factor = 0.1
     dust_moist_correction = 0.1
     config_mynn_enh_mix = false
+    config_mp_aero_emission = false
     kanthro = 1
     kwildfire = 1
     aero_dir_rad_fdb = 0

@@ -17,6 +17,8 @@ def fcst(xmlFile, expdir, do_ensemble=False, dcEnsGrpInfo=None, do_spinup=False)
     # Task-specific EnVars beyond the task_common_vars
     extrn_mdl_source = os.getenv('IC_EXTRN_MDL_NAME', 'IC_PREFIX_not_defined')
     fcst_len_hrs_cycles = os.getenv('FCST_LEN_HRS_CYCLES', '03 03')
+    if do_spinup:
+        fcst_len_hrs_cycles = ('01 ' * 24).strip()  # spinup cycles only need 1h forecasts
     lbc_interval = os.getenv('LBC_INTERVAL', '3')
     history_interval = os.getenv('HISTORY_INTERVAL', '1')
     diag_interval = os.getenv('DIAG_INTERVAL', '1')
@@ -34,6 +36,8 @@ def fcst(xmlFile, expdir, do_ensemble=False, dcEnsGrpInfo=None, do_spinup=False)
         'MPASOUT_INTERVAL': os.getenv('MPASOUT_INTERVAL', '1'),
         'MPASOUT_TIMELEVELS': os.getenv('MPASOUT_TIMELEVELS', ''),
         'PHYSICS_SUITE': f'{physics_suite}',
+        'LSM_SCHEME': os.getenv('LSM_SCHEME', 'sf_ruc'),
+        'NSOIL_LEVELS': os.getenv('NSOIL_LEVELS', '9'),
         'FCST_LEN_HRS_CYCLES': f'{fcst_len_hrs_cycles}',
         'FCST_DT': os.getenv('FCST_DT', 'FCST_DT_not_defined'),
         'FCST_SUBSTEPS': os.getenv('FCST_SUBSTEPS', 'FCST_SUBSTEPS_not_defined'),
@@ -47,6 +51,11 @@ def fcst(xmlFile, expdir, do_ensemble=False, dcEnsGrpInfo=None, do_spinup=False)
         dcTaskEnv['MPASOUT_SAVE2COM_HRS'] = os.getenv('MPASOUT_SAVE2COM_HRS')
     if do_spinup:
         dcTaskEnv['DO_SPINUP'] = "TRUE"
+
+    if os.getenv('DO_SPPT', 'FALSE').upper() == "TRUE":
+        dcTaskEnv['DO_SPPT'] = "true"
+    else:
+        dcTaskEnv['DO_SPPT'] = "false"
 
     if os.getenv('DO_CHEMISTRY', 'FALSE').upper() == "TRUE":
         dcTaskEnv['EBB_DCYCLE'] = os.getenv('EBB_DCYCLE', 0)
@@ -112,7 +121,10 @@ def fcst(xmlFile, expdir, do_ensemble=False, dcEnsGrpInfo=None, do_spinup=False)
     if os.getenv("DO_JEDI", "FALSE").upper() == "TRUE":
         do_da = True
         if os.getenv("DO_ENSEMBLE", "FALSE").upper() == "TRUE":
-            jedidep = f'\n    <taskdep task="getkf_solver"/>'
+            if os.getenv("GETKF_ONESTEP", "TRUE").upper() == "FALSE":
+                jedidep = f'\n    <taskdep task="getkf_solver"/>'
+            else:
+                jedidep = f'\n    <taskdep task="getkf"/>'
         elif do_spinup:
             jedidep = f'\n    <taskdep task="jedivar_spinup"/>'
         else:

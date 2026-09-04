@@ -22,18 +22,24 @@ def graphics(xmlFile, expdir):
         'FCST_LEN_HRS_CYCLES': os.getenv('FCST_LEN_HRS_CYCLES', '03 03'),
         'TILE': '#tile#',
         'GRAPHICS_ZIP': os.getenv('GRAPHICS_ZIP', 'FALSE').upper(),
+        'GRAPHICS_MODEL': os.getenv('GRAPHICS_MODEL', ''),
+        'UPP_DOMAIN': os.getenv('UPP_DOMAIN', 'conus.'),
     }
     # dependencies
     timedep = ""
     realtime = os.getenv("REALTIME", "false")
     if realtime.upper() == "TRUE":
         starttime = get_cascade_env(f"STARTTIME_{task_id}".upper())
-        timedep = f'\n  <timedep><cyclestr offset="{starttime}">@Y@m@d@H@M00</cyclestr></timedep>'
+        timedep = f'\n    <timedep><cyclestr offset="{starttime}">@Y@m@d@H@M00</cyclestr></timedep>'
     #
-    taskdep = ''
+    taskdep = '\n<taskdep task="upp_g00"/>'
     ngroup = int(os.getenv('POST_GROUP_TOT_NUM'))
-    for i in range(ngroup):
-        taskdep += f'\n<taskdep task="upp_g{i:02d}"/>'
+    for i in range(1, ngroup):
+        taskdep += f'''
+<or>
+  <not><taskvalid task="upp_g{i:02d}"/></not>
+  <taskdep task="upp_g{i:02d}"/>
+</or>'''
     taskdep = textwrap.indent(taskdep, '    ')
     #
     dependencies = f'''

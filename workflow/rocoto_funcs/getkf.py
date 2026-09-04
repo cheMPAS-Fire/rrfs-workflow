@@ -14,11 +14,14 @@ def getkf(xmlFile, expdir, taskType):
     # Task-specific EnVars beyond the task_common_vars
     extrn_mdl_source = os.getenv('IC_EXTRN_MDL_NAME', 'IC_PREFIX_not_defined')
     physics_suite = os.getenv('PHYSICS_SUITE', 'PHYSICS_SUITE_not_defined')
+    lsm_scheme = os.getenv('LSM_SCHEME', 'sf_ruc')
     recenter_cycs = os.getenv('RECENTER_CYCS', '99')
     analysis_variables = os.getenv('ANALYSIS_VARIABLES', '0')
     dcTaskEnv = {
         'EXTRN_MDL_SOURCE': f'{extrn_mdl_source}',
         'PHYSICS_SUITE': f'{physics_suite}',
+        'LSM_SCHEME': f'{lsm_scheme}',
+        'NSOIL_LEVELS': os.getenv('NSOIL_LEVELS', '9'),
         'REFERENCE_TIME': '@Y-@m-@dT@H:00:00Z',
         'DO_RADAR_REF': os.getenv('DO_RADAR_REF', 'FALSE').upper(),
         'YAML_GEN_METHOD': os.getenv('YAML_GEN_METHOD', '1'),
@@ -27,12 +30,18 @@ def getkf(xmlFile, expdir, taskType):
         'ENS_SIZE': os.getenv("ENS_SIZE", '5'),
         'GETKF_TYPE': taskType.lower(),
         'USE_CONV_SAT_INFO': os.getenv('USE_CONV_SAT_INFO', 'TRUE').upper(),
+        'SAT_USELIST': os.getenv('SAT_USELIST', ''),
         'EMPTY_OBS_SPACE_ACTION': os.getenv('EMPTY_OBS_SPACE_ACTION', 'skip output'),
+        'GETKF_ONESTEP': os.getenv('GETKF_ONESTEP', 'false').upper(),
+        'PIO_STRIDE': os.getenv('PIO_STRIDE', '')
     }
+
     if taskType.upper() == "OBSERVER":
         task_id = "getkf_observer"
     elif taskType.upper() == "SOLVER":
         task_id = "getkf_solver"
+    elif taskType.upper() == "OBSERVER_SOLVER":
+        task_id = "getkf"
     elif taskType.upper() == "POST":
         task_id = "getkf_post"
     if analysis_variables != '0':
@@ -45,7 +54,7 @@ def getkf(xmlFile, expdir, taskType):
     if realtime.upper() == "TRUE":
         starttime = get_cascade_env(f"STARTTIME_{task_id}".upper())
         timedep = f'\n    <timedep><cyclestr offset="{starttime}">@Y@m@d@H@M00</cyclestr></timedep>'
-    if taskType.upper() == "OBSERVER":
+    if taskType.upper() == "OBSERVER" or taskType.upper() == "OBSERVER_SOLVER":
         if os.getenv("DO_IODA", "FALSE").upper() == "TRUE":
             iodadep = '<taskdep task="ioda_bufr"/>'
             dcTaskEnv['IODA_BUFR_WGF'] = 'enkf'
@@ -94,7 +103,10 @@ def getkf(xmlFile, expdir, taskType):
         dependencies = f'''
   <dependency>
   <and>{timedep}
+   <or>
     <taskdep task="getkf_solver"/>
+    <taskdep task="getkf"/>
+   </or>
   </and>
   </dependency>'''
     #
