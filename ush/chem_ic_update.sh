@@ -2,8 +2,8 @@
 # Configure appropriate chemistry settings for the ic or lbc task
 #
 # shellcheck disable=SC2154,SC2153
-
-species_list=(smoke_fine smoke_coarse unspc_fine unspc_coarse dust_fine dust_coarse polp_tree polp_grass polp_weed pols_all polp_all ssalt_fine ssalt_coarse ch4)
+species_list=(smoke_fine smoke_coarse unspc_fine unspc_coarse dust_fine dust_coarse polp_tree polp_grass polp_weed pols_all polp_all ssalt_fine ssalt_coarse ch4   co    nox   antvoc bbvoc antsoa bbsoa soa)
+chemgrp_list=(smoke      smoke        anthro     anthro       dust      dust        pollen    pollen     pollen    pollen   pollen   ssalt      ssalt        extra extra extra soa    soa   soa    soa   soa)
 # TODO, for now, only either cycle from previous output or reinitialize
 # The realtime system and retros system will be able to use smoke and dust
 # from the RRFS as initial and boundary conditions
@@ -26,11 +26,15 @@ while [[ "${found}" == "false" ]] && (( 10#${offset_hours} <= 10#${look_back_hou
 done
 
 if [[ "${found}" == "true" ]]; then
+   knt=0
    for species in "${species_list[@]}"; do
-#TODO - add check for CHEM_GROUPS
+      # First check to see if the chem group is active
+# TODO - check for chem groups? Will not work for species attached to chem group but listed as EXTRA_CHEMICAL_TRACER
+      if [[ "${CHEM_GROUPS,,}" == *${chemgrp_list[$knt]}* ]]; then 
       # Check to see if the species is in the file
       if ncdump -hv "${species}" "${mpasout}" 1>/dev/null; then
         ncks -A -v "${species}" "${mpasout}" init.nc
+      fi
       fi
    done
 fi

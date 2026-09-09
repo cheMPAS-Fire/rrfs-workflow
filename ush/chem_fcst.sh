@@ -132,6 +132,15 @@ if [[ -s "${UMBRELLA_PREP_CHEM_DATA}/rwc.init.nc" ]]; then
   fi
 fi
 #
+# SOA
+if [[ "${CHEM_GROUPS,,}" == *soa* ]]; then
+      sed -i "s/\(config_soa_scheme[[:space:]]*=[[:space:]]*\).*/\1${CONFIG_SOA_SCHEME},/" namelist.atmosphere
+      if [[ ${CONFIG_SOA_SCHEME} == 1 ]] ; then
+         num_chem=$(( num_chem + 1 ))
+      elif  [[ ${CONFIG_SOA_SCHEME} == 2 ]]; then
+         num_chem=$(( num_chem + 4 ))
+      fi
+fi
 # Extra chemical tracers
 if (( "${#EXTRA_CHEMICAL_TRACERS[@]}" > 0 )); then
    n_extra=$(echo "${EXTRA_CHEMICAL_TRACERS//,/ }" | wc -w)
@@ -159,6 +168,10 @@ if [[ "${CONFIG_MIE_AOD_OPT}" -gt 0 ]]; then
          sed -i "s/\(config_mie_aod_opt\s*=\s*\).*/\10/"
       fi
    fi 
+fi
+if [[ "${CONFIG_DIR_RAD_FDB}" -gt 0 ]]; then
+   sed -i '/^&physics$/a \    aer_opt = 2' namelist.atmosphere
+   sed -i "s/\(aero_dir_rad_fdb\s*=\s*\).*/\1${CONFIG_DIR_RAD_FDB}/" namelist.atmosphere
 fi
 
 #
