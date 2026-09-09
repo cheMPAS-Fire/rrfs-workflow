@@ -10,6 +10,7 @@ from rocoto_funcs.base import xml_task, get_cascade_env
 def archive(xmlFile, expdir):
     task_id = 'archive'
     cycledefs = 'archive'
+    do_graphics = os.getenv("DO_GRAPHICS", "FALSE").upper()
     # Task-specific EnVars beyond the task_common_vars
     dcTaskEnv = {
         'ARCHIVE_INTERVAL': os.getenv("ARCHIVE_INTERVAL", "2"),
@@ -29,10 +30,17 @@ def archive(xmlFile, expdir):
         starttime = get_cascade_env(f"STARTTIME_{task_id}".upper())
         timedep = f'\n    <timedep><cyclestr offset="{starttime}">@Y@m@d@H@M00</cyclestr></timedep>'
     #
-    taskdep = ''
+    #
+    taskdep = '\n<taskdep task="upp_g00"/>'
+    if do_graphics == "TRUE":
+        taskdep += '\n<metataskdep metatask="graphics"/>'
     ngroup = int(os.getenv('POST_GROUP_TOT_NUM'))
-    for i in range(ngroup):
-        taskdep += f'\n<taskdep task="upp_g{i:02d}"/>'
+    for i in range(1, ngroup):
+        taskdep += f'''
+<or>
+  <not><taskvalid task="upp_g{i:02d}"/></not>
+  <taskdep task="upp_g{i:02d}"/>
+</or>'''
     taskdep = textwrap.indent(taskdep, '    ')
     #
     dependencies = f'''

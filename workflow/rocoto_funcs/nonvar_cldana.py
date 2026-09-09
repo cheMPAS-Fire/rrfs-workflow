@@ -64,7 +64,10 @@ def nonvar_cldana(xmlFile, expdir, do_ensemble=False, spinup_mode=0):
     jedidep = ""
     if os.getenv("DO_JEDI", "FALSE").upper() == "TRUE":
         if os.getenv("DO_ENSEMBLE", "FALSE").upper() == "TRUE":
-            jedidep = f'\n    <taskdep task="getkf_solver"/>'
+            if os.getenv("GETKF_ONESTEP", "TRUE").upper() == "FALSE":
+                jedidep = f'\n    <taskdep task="getkf_solver"/>'
+            else:
+                jedidep = f'\n    <taskdep task="getkf"/>'
         elif do_spinup:
             jedidep = f'\n    <taskdep task="jedivar_spinup"/>'
         else:
@@ -81,5 +84,5 @@ def nonvar_cldana(xmlFile, expdir, do_ensemble=False, spinup_mode=0):
   </dependency>'''
     #
     xml_task(xmlFile, expdir, task_id, cycledefs, dcTaskEnv, dependencies,
-             metatask, meta_id, meta_bgn, meta_end)
+             metatask, meta_id, meta_bgn, meta_end, command_id="NONVAR_CLDANA")
 # end of nonvar_cldana --------------------------------------------------------
