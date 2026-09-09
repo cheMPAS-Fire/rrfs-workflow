@@ -74,10 +74,6 @@ if [[ ! -s './init.nc' ]]; then
   err_exit
 fi
 
-# add/update chemistry species to init.nc
-if [[ "${DO_CHEMISTRY^^}" == "TRUE" ]]; then
-  source "${USHrrfs}"/chem_ic_update.sh
-fi
 
 # copy init.nc to COMOUT
 ${cpreq} "${DATA}/init.nc" "${COMOUT}/ic/${WGF}${MEMDIR}"
