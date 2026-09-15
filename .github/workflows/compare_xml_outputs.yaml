@@ -96,9 +96,9 @@ jobs:
           echo "Check the differences in the 'Echo diffs' section,"
           echo "Or download the zipped artifact from the 'Upload diff artifact' section to inspect them locally."
 
-          ignore_number=$(head -n 1 pr_branch/tests/.ignore.compare_xml_outputs)
+          ignore_number=$(head -n 1 pr_branch/tests/.ignore.compare_xml_yaml_outputs)
           if (( ignore_number == PR_NUMBER )); then
-            echo "ignore_number == PR_NUMBER, i.e. $ignore_number == $PR_NUMBER, so ignore XML diffs and exit 0"
+            echo "ignore_number == PR_NUMBER, i.e. $ignore_number == $PR_NUMBER, so ignore XML/YAML diffs and exit 0"
             exit 0
           else
             exit 1

@@ -83,12 +83,12 @@ source "${USHrrfs}/copy_obs.sh" "jedivar"
 #  find ensemble forecasts based on user settings
 #
 source "${USHrrfs}/find_ensembles.sh"
+ens_size=$(( 10#${ENS_SIZE} ))
+ens_count=$(find ens -name "mem*.nc" | wc -l)
 #
 # For HYB_ENS_TYPE=0, check number of ensemble files, if not enough, default to pure 3DVar
 #
-if (( HYB_ENS_TYPE == 0 )) ; then
-  ens_size=$(( 10#${ENS_SIZE} ))
-  ens_count=$(find ens -name "mem*.nc" | wc -l)
+if (( HYB_ENS_TYPE == 0 || HYB_ENS_TYPE == 1 )) ; then
   if (( ens_count < ens_size )); then
      echo "Number of ensemble files is ${ens_count}, less than 30, default to 3DVar"
      export HYB_WGT_ENS=0.0
@@ -110,9 +110,12 @@ fi
 # generate namelist, streams, and jedivar.yaml on the fly
 run_duration=1:00:00
 physics_suite=${PHYSICS_SUITE:-'mesoscale_reference'}
+lsm_scheme=${LSM_SCHEME:-'sf_ruc'}
+nsoillevels=${NSOIL_LEVELS:-9}
 jedi_da=true #true
 pio_num_iotasks=${NODES}
 pio_stride=${PPN}
+do_sppt=${DO_SPPT:-'false'} 
 
 # We set dt, substeps, radt values to avoid errors in reading namelist.atmosphere
 # but they will NOT be used since no model integration in DA steps
@@ -168,7 +171,7 @@ if [[ ${START_TYPE} == "warm" ]] || [[ ${START_TYPE} == "cold" && ${COLDSTART_CY
   #
   # Run jedivar in the 2nd pass for reflectivity DA
   #
-  if [[ ${START_TYPE} == "warm" && ${DO_RADAR_REF^^} == "TRUE" ]]; then
+  if [[ ${START_TYPE} == "warm" && ${DO_RADAR_REF^^} == "TRUE" ]] && (( ens_count == ens_size )); then
     export ANALYSIS_VARIABLES="12"
     ${cpreq}  "${EXPDIR}/config/bec_diffusion.yaml" "${DATA}"/bec_diffusion.yaml
     ln -sf "${FIXrrfs}/${MESH_NAME}/diffusionloc/${MESH_NAME}_L${nlevel}_15km11levels" data/diffusionloc
@@ -199,6 +202,7 @@ if [[ ${START_TYPE} == "warm" ]] || [[ ${START_TYPE} == "cold" && ${COLDSTART_CY
   if  [[ -s log.pass2.out ]]; then
     cp "${DATA}"/log.pass2.out "${COMOUT}/jedivar/${WGF}"
   fi
+  touch "${COMOUT}/jedivar/${WGF}/jedivar.done"
 else
   echo "INFO: No DA at the cold start cycle"
 fi

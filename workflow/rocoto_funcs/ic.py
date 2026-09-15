@@ -15,12 +15,12 @@ def ic(xmlFile, expdir, do_ensemble=False):
         'EXTRN_MDL_SOURCE': f'{extrn_mdl_source}',
         'PHYSICS_SUITE': f'{physics_suite}',
         'NSOIL_LEVELS': os.getenv('NSOIL_LEVELS', '9'),
+        'USE_MERRA2': os.getenv('USE_MERRA2', 'FALSE').upper(),
     }
 
     if os.getenv('DO_CHEMISTRY', 'FALSE').upper() == "TRUE":
         dcTaskEnv['USE_EXTERNAL_CHEM'] = os.getenv('USE_EXTERNAL_CHEM_ICS', 'FALSE').upper()
         dcTaskEnv['CHEM_GROUPS'] = os.getenv('CHEM_GROUPS', 'smoke')
-        dcTaskEnv['RETRO_CYCLETHROTTLE'] = os.getenv('RETRO_CYCLETHROTTLE',-1)
 
     if not do_ensemble:
         metatask = False

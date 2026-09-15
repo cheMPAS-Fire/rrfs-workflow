@@ -7,9 +7,10 @@ from rocoto_funcs.base import xml_task, get_cascade_env
 
 def recenter(xmlFile, expdir):
     task_id = 'recenter'
-    cycledefs = 'prod'
+    cycledefs = 'recenter'
     recenter_cycs = os.getenv('RECENTER_CYCS', '99')
     det_recentercycs_do_da = os.getenv('DET_RECENTERCYCS_DO_DA', 'false')
+    det_nonvar_cldana = os.getenv('DET_RECENTERCYCS_CLDANA', 'false')
     # Task-specific EnVars beyond the task_common_vars
     dcTaskEnv = {
         'ENS_SIZE': os.getenv("ENS_SIZE", '5'),
@@ -25,14 +26,12 @@ def recenter(xmlFile, expdir):
         timedep = f'\n    <timedep><cyclestr offset="{starttime}">@Y@m@d@H@M00</cyclestr></timedep>'
 
     if det_recentercycs_do_da.upper() == "TRUE":
-        datadep_init = f'<datadep age="00:01:00"><cyclestr>&COMROOT;/&NET;/&rrfs_ver;/&RUN;.@Y@m@d/@H/jedivar/det/init.@Y-@m-@d_@H.@M.@S.nc</cyclestr></datadep>'
+        if det_nonvar_cldana.upper() == "TRUE":
+            datadep = f'<datadep age="00:01:00"><cyclestr>&COMROOT;/&NET;/&rrfs_ver;/&RUN;.@Y@m@d/@H/nonvar_cldana/det/nonvar_cldana.done</cyclestr></datadep>'
+        else:
+            datadep = f'<datadep age="00:01:00"><cyclestr>&COMROOT;/&NET;/&rrfs_ver;/&RUN;.@Y@m@d/@H/jedivar/det/jedivar.done</cyclestr></datadep>'
     else:
-        datadep_init = f'<datadep age="00:01:00"><cyclestr>&DATAROOT;/@Y@m@d/&RUN;_prep_ic_@H_&rrfs_ver;/det/prep_ic.done</cyclestr></datadep>'
-
-    datadep = f'''<or>
-         {datadep_init}
-         <datadep age="00:01:00"><cyclestr>&COMROOT;/&NET;/&rrfs_ver;/&RUN;.@Y@m@d/@H/jedivar/det/mpasout.@Y-@m-@d_@H.@M.@S.nc</cyclestr></datadep>
-     </or>'''
+        datadep = f'<datadep age="00:01:00"><cyclestr>&DATAROOT;/@Y@m@d/&RUN;_prep_ic_@H_&rrfs_ver;/det/prep_ic.done</cyclestr></datadep>'
 
     recenterhrs = recenter_cycs.split(' ')
     streqs = ""

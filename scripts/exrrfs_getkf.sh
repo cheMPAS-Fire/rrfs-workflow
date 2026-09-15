@@ -30,10 +30,10 @@ mkdir -p obs ens jdiag
 #
 # copy observations files
 #
-if [[ "${GETKF_TYPE}" == "observer" ]]; then
+if [[ ${GETKF_TYPE} == observer*  ]]; then  # observer or observer_solver
   source "${USHrrfs}/copy_obs.sh" "getkf"
-else
-  ln -snf "${UMBRELLA_GETKF_OBSERVER_DATA}"/jdiag* jdiag/
+else  # solver or post
+  ln -snf "${UMBRELLA_GETKF_OBSERVER_DATA}"/jdiag* jdiag/.
 fi
 #
 # determine whether to begin new cycles and link correct ensembles
@@ -62,9 +62,12 @@ cd "${DATA}" || exit 1
 # generate namelist, streams, and getkf.yaml on the fly
 run_duration=1:00:00
 physics_suite=${PHYSICS_SUITE:-'mesoscale_reference'}
+lsm_scheme=${LSM_SCHEME:-'sf_ruc'}
+nsoillevels=${NSOIL_LEVELS:-9}
 jedi_da=true #true
-pio_num_iotasks=${NODES}
-pio_stride=${PPN}
+pio_stride=${PIO_STRIDE:-${PPN}}
+pio_num_iotasks=$(( NODES * PPN / pio_stride ))
+do_sppt=${DO_SPPT:-'false'} 
 
 # We set dt, substeps, radt values to avoid errors in reading namelist.atmosphere
 # but they will NOT be used since no model integration in DA steps
@@ -114,8 +117,8 @@ if [[ ${START_TYPE} == "warm" ]] || [[ ${START_TYPE} == "cold" && ${COLDSTART_CY
   export err=$?
   err_chk
   #
-  cp "${DATA}"/getkf*.yaml "${COMOUT}/getkf_${GETKF_TYPE}/${WGF}"
-  cp "${DATA}"/log.* "${COMOUT}/getkf_${GETKF_TYPE}/${WGF}"
+  cp "${DATA}"/getkf*.yaml "${COMOUT}/getkf${TYPESTR}/${WGF}"
+  cp "${DATA}"/log.* "${COMOUT}/getkf${TYPESTR}/${WGF}"
 
   # rename ombg to oman for posterior observer jdiag files
   if [[ "${GETKF_TYPE}" == "post" ]]; then
@@ -128,17 +131,19 @@ if [[ ${START_TYPE} == "warm" ]] || [[ ${START_TYPE} == "cold" && ${COLDSTART_CY
   fi
 
   # move jdiag* files to the umbrella directory if observer
-  if [[ "${GETKF_TYPE}" == "observer" || "${GETKF_TYPE}" == "post" ]]; then
-    cp "${DATA}"/jdiag* "${COMOUT}/getkf_${GETKF_TYPE}/${WGF}"
+  if [[ ${GETKF_TYPE} == observer* || "${GETKF_TYPE}" == "post" ]]; then
+    cp "${DATA}"/jdiag* "${COMOUT}/getkf${TYPESTR}/${WGF}"
     mv jdiag* "${UMBRELLA_GETKF_DATA}"/.
-  else # move post mean to umbrella if solver
+  fi
+  # move post mean to umbrella if solver
+  if [[ "${GETKF_TYPE}" =~ ^(observer_solver|solver)$ ]]; then
     mv "${DATA}"/data/ens/mem000.nc "${UMBRELLA_GETKF_DATA}"/post_mean.nc
   fi
 
   # Save analysis files if requested
   if [[ "${GETKF_TYPE}" == "post" && "${SAVE_GETKF_ANL^^}" == "TRUE" ]]; then
     for mem in $(seq -w 001 "${ENS_SIZE}"); do
-      cp -rL "${DATA}"/data/ens/mem"${mem}".nc "${COMOUT}"/getkf_"${GETKF_TYPE}"/"${WGF}"/mem"${mem}".nc
+      cp -rL "${DATA}/data/ens/mem${mem}.nc"  "${COMOUT}/getkf_${GETKF_TYPE}/${WGF}/mem${mem}.nc"
     done
   fi
 

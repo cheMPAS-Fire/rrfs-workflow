@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# shellcheck disable=SC2154,SC2153,SC2012
+# shellcheck disable=SC2154,SC2153,SC2012,SC2016
 # Remove any old files
 rm -f "${UMBRELLA_PREP_CHEM_DATA}"/smoke.init*nc # why we need this?
 
@@ -65,8 +65,8 @@ if [[ "${FIRE_DATASET}" == "NGFS" ]]; then
     export FIRE_INPUT="${NGFS_OUTPUT}"
 fi
 
-# Call regridder:
-srun --ntasks=1 --cpus-per-task=1 --mem=0 python -u "${SCRIPT}" \
+#
+srun python -u "${SCRIPT}" \
                "${FIRE_DATASET}" \
                "${DATA}" \
                "${FIRE_INPUT}" \
@@ -117,7 +117,29 @@ do
     ln -sf "${EMISFILE2}" "${EMISFILE}"
     ncap2 -O -s 'frp_in=frp_in.ttl($nkwildfire)' -s 'fre_in=fre_in.ttl($nkwildfire)' "${EMISFILE}" "${EMISFILE}"
   else
-    dummyRAVE=${FIXrrfs}/chemistry/RAVE/RAVE.dummy.${MESH_NAME}.nc
+     # Peristence emissions, only 24 forecasts are possible
+     # Beyond that we need to repeat the emissions
+     timestr1=$(date +%Y%m%d%H -d "${previous_day} ${HH} + ${offset} hours")
+  fi
+
+  timestr2=$(date +%Y-%m-%d_%H -d "${current_fcst_time}")
+  timestr3=$(date +%Y-%m-%d_%H:00:00 -d "${current_fcst_time}")
+  #
+  EMISFILE="${UMBRELLA_PREP_CHEM_DATA}/smoke.init.retro.${timestr2}.00.00.nc"
+  EMISFILE2="${RAVE_OUTPUTDIR}/${MESH_NAME}-${FIRE_DATASET}-${timestr1}.nc"
+  if [[ -r "${EMISFILE2}" ]]; then
+    ncrename -v .PM25,e_bb_in_smoke_fine "${EMISFILE2}"
+    ncrename -v .FRP_MEAN,frp_in -v FRE,fre_in "${EMISFILE2}"
+    ncrename -v .SO2,e_bb_in_so2 "${EMISFILE2}"
+    ncrename -v .CH4,e_bb_in_ch4 "${EMISFILE2}"
+    ncrename -v .PM10,e_bb_in_smoke_coarse "${EMISFILE2}"
+    ncrename -v .CO,e_bb_in_co "${EMISFILE2}"
+    ncrename -v .NH3,e_bb_in_nh3 "${EMISFILE2}"
+    ncrename -v .NOx,e_bb_in_nox "${EMISFILE2}"
+    ln -sf "${EMISFILE2}" "${EMISFILE}"
+    ncap2 -O -s 'frp_in=frp_in.ttl($nkwildfire)' -s 'fre_in=fre_in.ttl($nkwildfire)' "${EMISFILE}" "${EMISFILE}"
+  else
+    dummyRAVE=${FIXrrfs}/chemistry/${FIRE_DATASET}/${FIRE_DATASET}.dummy.${MESH_NAME}.nc
     if [[ -s ${dummyRAVE} ]]; then
       cp "${dummyRAVE}" "${EMISFILE}"
     else

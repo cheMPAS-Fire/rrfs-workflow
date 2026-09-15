@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 #!/usr/bin/env python3
+=======
+#!/usr/bin/env python
+>>>>>>> emc/rrfs-mpas-jedi
 import argparse
 import numpy as np
 
@@ -77,9 +81,7 @@ def write_tbl(
 ):
     with open(outpath, "w") as f:
         f.write(f"{nsw} {nlw} {naero} ! Header: nswbands, nlwbands, num_aero_spc\n")
-
         # f.write(f"{header_string}\n")
-
         for block in species_blocks:
             f.write(f"{block['sw_name']}\n")
             for i, (r, im) in enumerate(zip(block["sw_r"], block["sw_i"]), start=1):
@@ -127,7 +129,12 @@ def main():
     wavenumber1 = [10., 350., 500., 630., 700., 820., 980., 1080., 1180., 1390., 1480., 1800., 2080., 2250., 2390., 2600.]
     wavenumber2 = [350., 500., 630., 700., 820., 980., 1080., 1180., 1390., 1480., 1800., 2080., 2250., 2390., 2600., 3250.]
 
+    # Header string
     header_string = "AERO_OPT.TBL"
+
+    # ============================================================================
+    # Optional: Override configuration with command-line arguments
+    # ============================================================================
 
     p = argparse.ArgumentParser()
     p.add_argument("--water", default=water_file)
@@ -180,7 +187,7 @@ def main():
         header_string=args.header,
     )
 
-    print("Program End Successfully")
+    print(f"Program End Successfully")
 
 
 if __name__ == "__main__":
