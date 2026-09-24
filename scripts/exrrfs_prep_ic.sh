@@ -61,6 +61,11 @@ for index in "${mem_list[@]}"; do # loop through all the members
     if [[ -s ${thisfile} ]]; then
       echo "${cpreq} ${thisfile} ${umbrella_prep_ic_mem}/init.nc" >> "${CMDFILE}"
       echo "cold start from ${thisfile}"
+      # add/update chemistry species to init.nc
+      if [[ "${DO_CHEMISTRY^^}" == "TRUE" ]] && [[ "${CYCLE_CHEMISTRY^^}" = "TRUE"]]; then
+        echo "cycling chemistry fields"
+        source "${USHrrfs}"/chem_ic_update.sh
+      fi
     else
       echo "FATAL ERROR: PREP_IC failed, cannot find cold start file: ${thisfile}"
       err_exit
@@ -93,10 +98,6 @@ for index in "${mem_list[@]}"; do # loop through all the members
     else
       echo "FATAL ERROR: PREP_IC failed, cannot find warm start file: ${thisfile}"
       err_exit
-    fi
-    # add/update chemistry species to init.nc
-    if [[ "${DO_CHEMISTRY^^}" == "TRUE" ]]; then
-      source "${USHrrfs}"/chem_ic_update.sh
     fi
   else
     echo "FATAL ERROR: PREP_IC failed, start type is not defined"
