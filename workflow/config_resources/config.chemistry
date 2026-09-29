@@ -23,6 +23,15 @@ export USE_EXTERNAL_CHEM_ICS=false
 #
 export WALLTIME_PREP_CHEM="00:45:00"
 #
+#export USE_EXT_CHEM_MODEL="GEFS"
+#export LBC_CHEM_EXTRN_MDL_FILENAME_PATTERN="@Y@m@d/@H/chem/pgrb2ap5/gefs.chem.t00z.a3d_0p50.f^HHH^.grib2"
+#export LBC_CHEM_EXTRN_MDL_BASEDIR="/scratch4/BMC/acomp/Kyoungmin/Input/GEFS"
+#export LBC_CHEM_OFFSET=0
+#export LBC_CHEM_LENGTH=48
+#export LBC_CHEM_INTERVAL=3
+#export LBC_CHEM_UNGRIB_GROUP_TOTAL_NUM=1
+#export LBC_CHEM_GROUP_TOTAL_NUM=1
+#
 # add mesh dependent logic when needed, such as case ${MESH_NAME} in "conus12km", etc
 
 case ${MACHINE} in

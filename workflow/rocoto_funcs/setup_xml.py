@@ -1,16 +1,18 @@
 #!/usr/bin/env python
 #
 import os
+import sys
 import stat
 from rocoto_funcs.base import header_begin, header_entities, header_end, \
     wflow_begin, wflow_log, wflow_cycledefs, wflow_end
 from rocoto_funcs.smart_cycledefs import smart_cycledefs
 from rocoto_funcs.smart_post_groups import smart_post_groups
-from rocoto_funcs.smart_save4next_groups import smart_save4next_groups
 from rocoto_funcs.ungrib_ic import ungrib_ic
 from rocoto_funcs.ungrib_lbc import ungrib_lbc
+from rocoto_funcs.ungrib_lbc_chem import ungrib_lbc_chem
 from rocoto_funcs.ic import ic
 from rocoto_funcs.lbc import lbc
+from rocoto_funcs.lbc_chem import lbc_chem
 from rocoto_funcs.prep_ic import prep_ic
 from rocoto_funcs.prep_lbc import prep_lbc
 from rocoto_funcs.mpas_blend import mpas_blend
@@ -41,6 +43,9 @@ from rocoto_funcs.archive import archive
 
 
 def setup_xml(HOMErrfs, expdir):
+    if os.path.exists(f"{expdir}/config/satinfo") and os.getenv("USE_THE_LATEST_SATBIAS") is None:
+        env_vars = {'USE_THE_LATEST_SATBIAS': 'TRUE'}
+        os.environ.update(env_vars)
     NET = os.getenv('NET').lower()
     machine = os.getenv('MACHINE').lower()
     MESH_NAME = os.getenv("MESH_NAME")
@@ -54,9 +59,6 @@ def setup_xml(HOMErrfs, expdir):
     # create post groups smartly and update dcCycleDef accordingly
     if os.getenv("DO_POST", "TRUE").upper() == "TRUE":
         listPostGrpInfo = smart_post_groups(dcCycledef)
-    # define extra save4next cycledefs smartly
-    if os.getenv("DO_SPINUP", "FALSE").upper() == "TRUE" or os.getenv('DO_CYC', 'FALSE').upper() == "TRUE" and os.getenv('DO_RTMA', 'FALSE').upper() == 'FALSE':
-        listSave4NextGrpInfo = smart_save4next_groups(dcCycledef)
 
     fPath = f"{expdir}/{NET}.xml"
     with open(fPath, 'w') as xmlFile:
@@ -78,7 +80,7 @@ def setup_xml(HOMErrfs, expdir):
                 if do_chemistry == "TRUE":
                     ioda_airnow(xmlFile, expdir)
                 ioda_bufr(xmlFile, expdir)
-            if os.getenv("DO_RADAR_REF", "FALSE").upper() == "TRUE":
+            if os.getenv("USE_EXT_CHEM_MODEL", "GFS").upper() == os.getenv("LBC_EXTRN_MDL_MODEL", "GFS").upper():
                 ioda_mrms_refl(xmlFile, expdir)
             if os.getenv("DO_NONVAR_CLOUD_ANA", "FALSE").upper() == "TRUE":
                 nonvar_bufrobs(xmlFile, expdir)
@@ -88,9 +90,13 @@ def setup_xml(HOMErrfs, expdir):
                 ungrib_ic(xmlFile, expdir)
                 if "global" not in MESH_NAME:
                     ungrib_lbc(xmlFile, expdir)
+                    if os.getenv("USE_EXT_CHEM_MODEL", "GFS").upper() != os.getenv("LBC_EXTRN_MDL_MODEL", "GFS").upper():
+                        ungrib_lbc_chem(xmlFile, expdir)
                 ic(xmlFile, expdir)
                 if "global" not in MESH_NAME:
                     lbc(xmlFile, expdir)
+                    if os.getenv("USE_EXT_CHEM_MODEL", "GFS").upper() != os.getenv("LBC_EXTRN_MDL_MODEL", "GFS").upper():
+                        lbc_chem(xmlFile, expdir)
             #
             if os.getenv("DO_SPINUP", "FALSE").upper() == "TRUE":
                 prep_lbc(xmlFile, expdir)
@@ -99,19 +105,14 @@ def setup_xml(HOMErrfs, expdir):
                 jedivar(xmlFile, expdir, spinup_mode=1)
                 if os.getenv("DO_NONVAR_CLOUD_ANA", "FALSE").upper() == "TRUE":
                     nonvar_cldana(xmlFile, expdir, spinup_mode=1)
-                if os.getenv("DO_PYDAMONITOR", "FALSE").upper() == "TRUE":
-                    pyDAmonitor(xmlFile, expdir, spinup_mode=1)
                 fcst(xmlFile, expdir, do_spinup=True)
                 # prod line
                 prep_ic(xmlFile, expdir, spinup_mode=-1)
                 jedivar(xmlFile, expdir, spinup_mode=-1)
                 if os.getenv("DO_NONVAR_CLOUD_ANA", "FALSE").upper() == "TRUE":
                     nonvar_cldana(xmlFile, expdir, spinup_mode=-1)
-                if os.getenv("DO_PYDAMONITOR", "FALSE").upper() == "TRUE":
-                    pyDAmonitor(xmlFile, expdir, spinup_mode=-1)
                 fcst(xmlFile, expdir)
-                for dcGrpInfo in listSave4NextGrpInfo:
-                    save_for_next(xmlFile, expdir, dcGrpInfo)
+                save_for_next(xmlFile, expdir)
             elif os.getenv("DO_FCST", "TRUE").upper() == "TRUE":
                 prep_ic(xmlFile, expdir)
                 if "global" not in MESH_NAME:
@@ -128,8 +129,7 @@ def setup_xml(HOMErrfs, expdir):
                     pyDAmonitor(xmlFile, expdir)
                 fcst(xmlFile, expdir)
                 if os.getenv('DO_CYC', 'FALSE').upper() == "TRUE" and os.getenv('DO_RTMA', 'FALSE').upper() == 'FALSE':
-                    for dcGrpInfo in listSave4NextGrpInfo:
-                        save_for_next(xmlFile, expdir, dcGrpInfo)
+                    save_for_next(xmlFile, expdir)
             #
             if os.getenv("DO_POST", "TRUE").upper() == "TRUE":
                 for index, dcGrpInfo in enumerate(listPostGrpInfo):
@@ -139,6 +139,7 @@ def setup_xml(HOMErrfs, expdir):
                 graphics(xmlFile, expdir)
                 if not os.path.exists(f"{HOMErrfs}/workflow/sideload/pygraf"):
                     print("  *** DO_GRAPHICS=true but pygraf not cloned yet!!! ***\n  run `tools/clone_pygraf.sh` first\n")
+                    sys.exit(1)
             if os.getenv("DO_HOFX", "FALSE").upper() == "TRUE":
                 hofx(xmlFile, expdir)
             if os.getenv("DO_ARCHIVE", "FALSE").upper() == "TRUE":
@@ -171,24 +172,17 @@ def setup_xml(HOMErrfs, expdir):
             if os.getenv("DO_RECENTER", "FALSE").upper() == "TRUE":
                 recenter(xmlFile, expdir)
             if os.getenv("DO_JEDI", "FALSE").upper() == "TRUE":
-                if os.getenv("GETKF_ONESTEP", "FALSE").upper() == "TRUE":
-                    getkf(xmlFile, expdir, 'OBSERVER_SOLVER')
-                else:
-                    getkf(xmlFile, expdir, 'OBSERVER')
-                    getkf(xmlFile, expdir, 'SOLVER')
-
+                getkf(xmlFile, expdir, 'OBSERVER')
+                getkf(xmlFile, expdir, 'SOLVER')
                 if os.getenv("DO_GETKF_POST", "TRUE").upper() == "TRUE":
                     getkf(xmlFile, expdir, 'POST')
             if os.getenv("DO_NONVAR_CLOUD_ANA", "FALSE").upper() == "TRUE":
                 nonvar_cldana(xmlFile, expdir, do_ensemble=True)
-            if os.getenv("DO_PYDAMONITOR", "FALSE").upper() == "TRUE":
-                pyDAmonitor(xmlFile, expdir)
             listEnsGrpInfo = smart_ens_groups('fcst')
             for dcEnsGrpInfo in listEnsGrpInfo["group_list"]:
                 fcst(xmlFile, expdir, do_ensemble=True, dcEnsGrpInfo=dcEnsGrpInfo)
             if os.getenv('DO_CYC', 'FALSE').upper() == "TRUE":
-                for dcGrpInfo in listSave4NextGrpInfo:
-                    save_for_next(xmlFile, expdir, dcGrpInfo, do_ensemble=True)
+                save_for_next(xmlFile, expdir, do_ensemble=True)
             if os.getenv("DO_POST", "TRUE").upper() == "TRUE":
                 for index, dcGrpInfo in enumerate(listPostGrpInfo):
                     mpassit(xmlFile, expdir, index, dcGrpInfo, do_ensemble=True)
@@ -227,34 +221,16 @@ def setup_xml(HOMErrfs, expdir):
         extra = "\nmodule use /apps/ops/test/nco/modulefiles/core"
     elif machine in ['derecho']:
         extra = "\nsource /etc/profile.d/z00_modules.sh\nmodule use /glade/work/geguo/rocoto/modulefiles"
-    # ~~~~
-    example = f'''## Example crontab entry (use "crontab -e" to modify crontab):
-## */5 * * * * {fPath}'''
-    tail = ""
-    if machine in ['gaeac6']:
-        example = f'''## Example scrontab entry (remove the first "#" and use "scrontab -e" to modify scrontab):
-##SCRON --partition=cron_c6
-##SCRON --account=@your_account@
-##SCRON --time=00:05:00
-##SCRON --mem=8G
-##SCRON --mail-user=@your_email@
-##SCRON --dependency=singleton
-##SCRON --job-name=scron_rocoto
-##SCRON --output={expdir}/log.runrocoto
-#*/5 * * * * {fPath} no-server
-opt=""
-[[ "$1" == "no-server" ]] && opt="--no-server"'''
-        tail = ' $opt'
-    #
     with open(fPath, 'w') as rocotoFile:
         text = \
             f'''#!/usr/bin/env bash
-{example}
+## Example crontab entry (use "crontab -e" to modify crontab):
+## */5 * * * * {fPath}
 
 source /etc/profile{extra}
 module load rocoto/1.3.7g
 cd {expdir}
-rocotorun -w {NET}.xml -d {NET}.db{tail}
+rocotorun -w {NET}.xml -d {NET}.db
 '''
         rocotoFile.write(text)
 
