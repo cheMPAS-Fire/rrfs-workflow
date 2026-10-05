@@ -9,8 +9,10 @@ from rocoto_funcs.smart_post_groups import smart_post_groups
 from rocoto_funcs.smart_save4next_groups import smart_save4next_groups
 from rocoto_funcs.ungrib_ic import ungrib_ic
 from rocoto_funcs.ungrib_lbc import ungrib_lbc
+from rocoto_funcs.ungrib_lbc_chem import ungrib_lbc_chem
 from rocoto_funcs.ic import ic
 from rocoto_funcs.lbc import lbc
+from rocoto_funcs.lbc_chem import lbc_chem
 from rocoto_funcs.prep_ic import prep_ic
 from rocoto_funcs.prep_lbc import prep_lbc
 from rocoto_funcs.mpas_blend import mpas_blend
@@ -88,9 +90,13 @@ def setup_xml(HOMErrfs, expdir):
                 ungrib_ic(xmlFile, expdir)
                 if "global" not in MESH_NAME:
                     ungrib_lbc(xmlFile, expdir)
+                    if os.getenv("USE_EXT_CHEM_MODEL", "GFS").upper() != os.getenv("LBC_EXTRN_MDL_MODEL", "GFS").upper():
+                        ungrib_lbc_chem(xmlFile, expdir)
                 ic(xmlFile, expdir)
                 if "global" not in MESH_NAME:
                     lbc(xmlFile, expdir)
+                    if os.getenv("USE_EXT_CHEM_MODEL", "GFS").upper() != os.getenv("LBC_EXTRN_MDL_MODEL", "GFS").upper():
+                        lbc_chem(xmlFile, expdir)
             #
             if os.getenv("DO_SPINUP", "FALSE").upper() == "TRUE":
                 prep_lbc(xmlFile, expdir)
