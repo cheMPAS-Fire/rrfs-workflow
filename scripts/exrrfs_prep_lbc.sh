@@ -59,10 +59,12 @@ if [[ -s "${checkfile_chem}" ]]; then
     string_time=$(date -d "${CDATElbc:0:8} ${CDATElbc:8:2}" +%Y-%m-%d_%H.%M.%S)
     ${cpreq} "${COMINrrfs}/${RUN}.${YYYYMMDDlbc}/${HHlbc}/lbc/${WGF}${MEMDIR}/lbc.${string_time}.nc"  "${UMBRELLA_PREP_LBC_DATA}/."
     ncks -A -v lbc_dust_fine,lbc_dust_coarse "${COMINrrfs}/${RUN}.${YYYYMMDDlbc}/${HHlbc}/lbc_chem/${WGF}${MEMDIR}/lbc.chem.${string_time}.nc" "${UMBRELLA_PREP_LBC_DATA}/lbc.${string_time}.nc"
+    ncks -A -v lbc_smoke_fine "${COMINrrfs}/${RUN}.${YYYYMMDDlbc}/${HHlbc}/lbc_chem/${WGF}${MEMDIR}/lbc.chem.${string_time}.nc" "${UMBRELLA_PREP_LBC_DATA}/lbc.${string_time}.nc"
     # Only for GEFS-Aerosols due to the unit missmatch
     # Scalling factor may need to modified for other models
     ncap2 -s 'lbc_dust_fine=lbc_dust_fine*1e-9; lbc_dust_coarse=lbc_dust_coarse*1e-9' -O "${UMBRELLA_PREP_LBC_DATA}/lbc.${string_time}.nc" "${UMBRELLA_PREP_LBC_DATA}/lbc.${string_time}.nc"
-  done
+    ncap2 -s 'lbc_smoke_fine=lbc_smoke_fine*1e-9' -O "${UMBRELLA_PREP_LBC_DATA}/lbc.${string_time}.nc" "${UMBRELLA_PREP_LBC_DATA}/lbc.${string_time}.nc"
+done
 else
   echo "No external chemical boundary files"
 fi
