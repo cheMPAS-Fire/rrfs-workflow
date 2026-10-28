@@ -125,6 +125,10 @@ radt=30
 
 file_content=$(< "${PARMrrfs}/${physics_suite}/namelist.atmosphere") # read in all content
 eval "echo \"${file_content}\"" > namelist.atmosphere
+if [[ "${DO_CHEMISTRY^^}" == "TRUE" ]]; then
+  source "${USHrrfs}"/chem_namelist_atmosphere.sh
+fi
+
 ${cpreq} "${PARMrrfs}"/streams.atmosphere.jedivar streams.atmosphere
 export ANALYSIS_DATE=""${CDATE:0:4}-${CDATE:4:2}-${CDATE:6:2}T${CDATE:8:2}:00:00Z""
 CDATEm2=$(${NDATE} -2 "${CDATE}")
@@ -156,6 +160,11 @@ case ${YAML_GEN_METHOD:-1} in
     ;;
 esac
 
+if [[ "${DO_SPINUP^^}" == "TRUE" ]];  then
+  jedivar_str="jedivar_spinup"
+else
+  jedivar_str="jedivar"
+fi
 if [[ ${START_TYPE} == "warm" ]] || [[ ${START_TYPE} == "cold" && ${COLDSTART_CYCS_DO_DA^^} == "TRUE" ]]; then
   # run mpasjedi_variational.x
   #export OOPS_TRACE=1
@@ -195,12 +204,9 @@ if [[ ${START_TYPE} == "warm" ]] || [[ ${START_TYPE} == "cold" && ${COLDSTART_CY
       fi
   fi
   # the input/output file are linked from the umbrella directory, so no need to copy
-  if [[ "${DO_SPINUP^^}" == "TRUE" ]];  then
-    jedivar_str="jedivar_spinup"
-  else
-    jedivar_str="jedivar"
-  fi
-  cp "${DATA}/${initial_file}" "${COMOUT}/${jedivar_str}/${WGF}/${initial_file%.nc}.${timestr}.nc"
+  if [[ "${SAVE_JEDI_ANL:-"FALSE"}" == "TRUE" ]];  then
+    cp "${DATA}/${initial_file}" "${COMOUT}/${jedivar_str}/${WGF}/${initial_file%.nc}.${timestr}.nc"
+  fi  
   cp "${DATA}"/jdiag* "${COMOUT}/${jedivar_str}/${WGF}"
   cp "${DATA}"/jedivar*.yaml "${COMOUT}/${jedivar_str}/${WGF}"
   cp "${DATA}"/log.out "${COMOUT}/${jedivar_str}/${WGF}"
@@ -230,7 +236,7 @@ done
 satbias_list=(data/satbias_out/*satbias*.nc)
 if (( ${#satbias_list[@]} > 0 )); then
 #if ls ./data/satbias_out/*satbias*.nc >/dev/null 2>&1; then
-  cp "${DATA}"/data/satbias_out/*satbias*.nc "${COMOUT}/jedivar/${WGF}"
+  cp "${DATA}"/data/satbias_out/*satbias*.nc "${COMOUT}/${jedivar_str}/${WGF}"
 fi
 eval "${nullglob_save}" # Restore previous nullglob state
 

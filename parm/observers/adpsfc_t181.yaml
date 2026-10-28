@@ -54,7 +54,7 @@
            identifier:
              name: PolygonCheck
              logging: true
-           <<: *polygonConfig
+           <<: *polygonConfig  # yamllint disable-line rule:anchors
 
          # Time window filter
          - filter: Domain Check
@@ -126,7 +126,6 @@
              name: reduce obs space
 
          - filter: Variable Assignment
-           apply at iterations: 0,1
            identifier:
              name: DerivedSurfaceTemperature
              logging: true
@@ -180,8 +179,8 @@
                  xvar:
                    name: MetaData/pressure
                  xvals: [110000, 105000, 100000, 95000, 90000, 85000, 80000, 75000, 70000, 65000, 60000, 55000, 50000, 45000, 40000, 35000, 30000, 25000, 20000, 15000, 10000, 7500, 5000, 4000, 3000, 2000, 1000, 500, 400, 300, 200, 100, 0]
-                 errors: [0.7528, 0.7528, 0.7528, 0.7528, 0.7528, 0.7528, 0.7528, 0.7528, 0.7528, 0.7528, 0.7528, 0.7528, 0.7528, 0.7528, 0.7528, 0.7528, 0.7528, 0.7528, 0.7528, 0.7528, 0.7528, 0.7528, 0.7528, 0.7528, 0.7528, 0.7528, 0.7528, 0.7528, 0.7528, 0.7528, 0.7528, 0.7528, 0.7528]
-                 #errors: [1.5056, 1.5056, 1.5056, 1.5056, 1.5056, 1.5056, 1.5056, 1.5056, 1.5056, 1.5056, 1.5056, 1.5056, 1.5056, 1.5056, 1.5056, 1.5056, 1.5056, 1.5056, 1.5056, 1.5056, 1.5056, 1.5056, 1.5056, 1.5056, 1.5056, 1.5056, 1.5056, 1.5056, 1.5056, 1.5056, 1.5056, 1.5056, 1.5056]
+                 #errors: [0.7528, 0.7528, 0.7528, 0.7528, 0.7528, 0.7528, 0.7528, 0.7528, 0.7528, 0.7528, 0.7528, 0.7528, 0.7528, 0.7528, 0.7528, 0.7528, 0.7528, 0.7528, 0.7528, 0.7528, 0.7528, 0.7528, 0.7528, 0.7528, 0.7528, 0.7528, 0.7528, 0.7528, 0.7528, 0.7528, 0.7528, 0.7528, 0.7528]
+                 errors: [1.5056, 1.5056, 1.5056, 1.5056, 1.5056, 1.5056, 1.5056, 1.5056, 1.5056, 1.5056, 1.5056, 1.5056, 1.5056, 1.5056, 1.5056, 1.5056, 1.5056, 1.5056, 1.5056, 1.5056, 1.5056, 1.5056, 1.5056, 1.5056, 1.5056, 1.5056, 1.5056, 1.5056, 1.5056, 1.5056, 1.5056, 1.5056, 1.5056]
 
 #         # Error inflation based on pressure check (setupt.f90)
 #         - filter: Perform Action
@@ -396,6 +395,20 @@
            - variable:
                name: TempObsErrorData/airTemperatureAt2M
              value: is_valid
+           defer to post: true
+
+         # Halve final observation error after all QC and error restoration
+         - filter: Perform Action
+           apply at iterations: 0,1
+           identifier:
+             name: ObsErrorHalve
+             logging: true
+             diagnostic flag new: false
+           filter variables:
+           - name: airTemperatureAt2M
+           action:
+             name: inflate error
+             inflation factor: 0.5
            defer to post: true
 
          #- filter: GOMsaver
