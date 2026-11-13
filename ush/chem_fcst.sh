@@ -33,7 +33,10 @@ if [[ "${CHEM_GROUPS,,}" == *ssalt* ]]; then
       sed -i "s/config_ssalt_scheme\s*=\s*'off'/config_ssalt_scheme  = 'on'/g" namelist.atmosphere
       num_chem=$(( num_chem + 2 ))
 fi
-
+if [[ "${CHEM_GROUPS,,}" == *sna* ]]; then
+      sed -i "s/config_sna_scheme\s*=\s*'off'/config_sna_scheme  = 'on'/g" namelist.atmosphere
+      num_chem=$(( num_chem + 5 ))
+fi
 # Dust
 if [[ "${CHEM_GROUPS,,}" == *dust* ]]; then
   if [[ -s "${FIXrrfs}/chemistry/dust/dust_inputs.${MESH_NAME}.nc" ]]; then
@@ -117,7 +120,7 @@ if (( ${#files[@]}  )); then  # at least one file exists
   fi
   added_smoke="TRUE"
   # Set EBB_DCYCLE
-  sed -i -e "s/@ebb_dcycle@/${EBB_DCYCLE}/" namelist.atmosphere 
+  sed -i -e "s/@config_ebb_dcycle@/${EBB_DCYCLE}/" namelist.atmosphere 
 fi
 
 # RWC - Residual Wood Combustion
