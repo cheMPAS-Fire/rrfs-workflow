@@ -17,6 +17,7 @@ export EXTRA_CHEMICAL_TRACERS="" # e.g., "co,nox,so2"
 export CONFIG_MIE_AOD_OPT=0
 export CONFIG_DIR_RAD_FDB=0
 export CONFIG_SOA_SCHEME=0
+export CONFIG_BIOSOA_SCHEME=simple
 #
 export USE_EXTERNAL_CHEM_LBCS=false
 export USE_EXTERNAL_CHEM_ICS=false

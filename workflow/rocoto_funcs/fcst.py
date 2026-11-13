@@ -85,6 +85,7 @@ def fcst(xmlFile, expdir, do_ensemble=False, dcEnsGrpInfo=None, do_spinup=False,
         dcTaskEnv['CONFIG_MIE_AOD_OPT'] = os.getenv('CONFIG_MIE_AOD_OPT',0)
         dcTaskEnv['CONFIG_DIR_RAD_FDB'] = os.getenv('CONFIG_DIR_RAD_FDB',0)
         dcTaskEnv['CONFIG_SOA_SCHEME'] = os.getenv('CONFIG_SOA_SCHEME',0)
+        dcTaskEnv['CONFIG_BIOSOA_SCHEME'] = os.getenv('CONFIG_BIOSOA_SCHEME', 'off').lower()
         dcTaskEnv['CHEM_INPUT'] = os.getenv('CHEM_INPUT', 'CHEM_INPUT_undefined')
         dcTaskEnv['ANTHRO_EMISINV'] = os.getenv('ANTHRO_EMISINV','GRA2PES')
         chemdep = '\n    <metataskdep metatask="prep_chem"/>'

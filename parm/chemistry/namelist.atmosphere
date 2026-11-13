@@ -6,6 +6,8 @@
     config_pollen_scheme = 'off'
     config_rwc_scheme = 'off'
     config_ssalt_scheme = 'off'
+    config_soa_scheme = 0
+    config_biosoa_scheme = 'off'
     config_extra_chemical_tracers = ''
     config_sna_scheme = 'off'
     config_soa_scheme = 0

@@ -130,7 +130,7 @@ if [[ "${CHEM_GROUP}" == "anthro" ]]; then
 fi # anthro
 
 if [[ "${CHEM_GROUP}" == "pollen" ]]; then
-  source "${USHrrfs}"/chem_prep_pollen.sh
+  source "${USHrrfs}"/chem_prep_bio.sh
 fi # bio/pollen
 
 if [[ "${CHEM_GROUP}" == "GOES_AOD" ]] ; then

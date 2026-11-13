@@ -131,15 +131,24 @@ if [[ -s "${UMBRELLA_PREP_CHEM_DATA}/rwc.init.nc" ]]; then
      num_chem=$(( num_chem + 1 ))
   fi
 fi
-#
 # SOA
 if [[ "${CHEM_GROUPS,,}" == *soa* ]]; then
-      sed -i "s/\(config_soa_scheme[[:space:]]*=[[:space:]]*\).*/\1${CONFIG_SOA_SCHEME},/" namelist.atmosphere
-      if [[ ${CONFIG_SOA_SCHEME} == 1 ]] ; then
-         num_chem=$(( num_chem + 1 ))
-      elif  [[ ${CONFIG_SOA_SCHEME} == 2 ]]; then
-         num_chem=$(( num_chem + 4 ))
-      fi
+   sed -i "s/\(config_soa_scheme[[:space:]]*=[[:space:]]*\).*/\1${CONFIG_SOA_SCHEME}/" namelist.atmosphere
+
+   if [[ "${CONFIG_SOA_SCHEME}" == 1 ]]; then
+      num_chem=$(( num_chem + 1 ))
+   elif [[ "${CONFIG_SOA_SCHEME}" == 2 ]]; then
+      num_chem=$(( num_chem + 4 ))
+   fi
+fi
+# Biogenic SOA
+biosoa_scheme="${CONFIG_BIOSOA_SCHEME:-none}"
+
+if [[ "${CHEM_GROUPS,,}" == *soa* &&
+      "${CONFIG_SOA_SCHEME:-0}" == 2 &&
+      "${biosoa_scheme,,}" == "simple" ]]; then
+   sed -i "s/\(config_biosoa_scheme[[:space:]]*=[[:space:]]*\).*/\1'simple'/" namelist.atmosphere
+   num_chem=$(( num_chem + 2 ))
 fi
 # Extra chemical tracers
 if (( "${#EXTRA_CHEMICAL_TRACERS[@]}" > 0 )); then
