@@ -47,7 +47,8 @@ def prep_lbc(xmlFile, expdir, do_ensemble=False):
     if realtime.upper() == "TRUE":
         starttime = get_cascade_env(f"STARTTIME_{task_id}".upper())
         timedep = f'\n   <timedep><cyclestr offset="{starttime}">@Y@m@d@H@M00</cyclestr></timedep>'
-
+    if os.getenv("USE_EXT_CHEM_MODEL", "GFS").upper() != os.getenv("LBC_EXTRN_MDL_MODEL", "GFS").upper():
+        timedep = timedep + f'\n <metataskdep metatask="lbc_chem{ensindexstr}" cycle_offset="-0:00:00" />'
     taskdep = ""
     for hr in range(0, int(prep_lbc_look_back_hrs) + 1):
         taskdep = taskdep + f'\n     <metataskdep metatask="lbc{ensindexstr}" cycle_offset="-{hr}:00:00" />'

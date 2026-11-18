@@ -59,7 +59,7 @@ interval_seconds=$((10#${INTERVAL}*3600)) # just a place holder as we use metata
 decomp_file_prefix="${MESH_NAME}.graph.info.part."
 #
 physics_suite=${PHYSICS_SUITE:-'PHYSICS_SUITE_not_defined'}
-file_content=$(< "${PARMrrfs}/chemistry/namelist.init_atmosphere.chemlbc") # read in all content
+file_content=$(< "${PARMrrfs}/chemistry/namelist.init_atmosphere.chem") # read in all content
 eval "echo \"${file_content}\"" > namelist.init_atmosphere
 
 # update namelist.init_atmosphere if do_chemistry
