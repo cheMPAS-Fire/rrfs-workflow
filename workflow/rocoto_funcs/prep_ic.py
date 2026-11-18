@@ -117,6 +117,8 @@ def prep_ic(xmlFile, expdir, do_ensemble=False, spinup_mode=0):
             icdep = f'\n      <metataskdep metatask="ic"/>'
         else:
             icdep = f'\n      <taskdep task="ic"/>'
+        if os.getenv("USE_EXT_CHEM_MODEL", "GFS").upper() != os.getenv("IC_EXTRN_MDL_MODEL", "GFS").upper():
+            icdep = icdep + f'\n      <taskdep task="ic_chem"/>'
     else:
         icdep = ""
     #

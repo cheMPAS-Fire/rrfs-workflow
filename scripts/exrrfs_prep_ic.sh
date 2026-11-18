@@ -210,6 +210,18 @@ if [[ "${START_TYPE}" == "cold" ]]; then
   fi
 fi
 
+#
+# Add chemical initial condition from an external file
+#
+chem_check=${COMINrrfs}/${RUN}.${PDY}/${cyc}/ic_chem/${WGF}${memdir}/init.chem.nc
+if [[ -s "${chem_check}" ]]; then
+  ncks -A -v dust_fine,dust_coarse,smoke_fine "${COMINrrfs}/${RUN}.${PDY}/${cyc}/ic_chem/${WGF}${memdir}/init.chem.nc" "${UMBRELLA_PREP_IC_DATA}/init.nc"
+  # This unit conversion is for GEFS-Aerosols
+  ncap2 -s 'dust_fine=dust_fine*1e-9; dust_coarse=dust_coarse*1e-9; smoke_fine=smoke_fine*1e-9' -O "${UMBRELLA_PREP_IC_DATA}/init.nc" "${UMBRELLA_PREP_IC_DATA}/init.nc"
+else
+  echo "no chem ic from external sources"
+fi
+
 # update SST
 if (( "${ENS_SIZE:-0}" < 2 )); then
   for hr in ${SST_UPDATE_CYCS:-"99"}; do
